@@ -1,0 +1,17 @@
+{
+  "template": "http://github.com/allenporter/cookiecutter-python",
+  "commit": "6035ef7fa54ecaf83d0593a553074cf952172437",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "full_name": "Allen Porter",
+      "email": "allen.porter@gmail.com",
+      "github_username": "allenporter",
+      "project_name": "google_photos_library_api",
+      "description": "A python client library for Google Photos Library API",
+      "version": "0.0.1",
+      "_template": "http://github.com/allenporter/cookiecutter-python"
+    }
+  },
+  "directory": null
+}
