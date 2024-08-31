@@ -7,7 +7,8 @@ authentication tokens.
 from http import HTTPStatus
 from abc import ABC, abstractmethod
 import logging
-from typing import Any
+from typing import Any, TypeVar, Type
+from mashumaro.mixins.json import DataClassJSONMixin
 
 import aiohttp
 
@@ -29,6 +30,8 @@ ERROR = "error"
 STATUS = "status"
 MESSAGE = "message"
 
+_T = TypeVar("_T", bound=DataClassJSONMixin)
+
 
 class AbstractAuth(ABC):
     """Base class for Google Photos authentication library.
@@ -46,14 +49,21 @@ class AbstractAuth(ABC):
         """Return a valid access token."""
 
     async def request(
-        self, method: str, url: str, **kwargs: Any
+        self,
+        method: str,
+        url: str,
+        headers: dict[str, Any] | None = None,
+        **kwargs: Any,
     ) -> aiohttp.ClientResponse:
         """Make a request."""
         try:
             access_token = await self.async_get_access_token()
         except ClientError as err:
             raise AuthException(f"Access token failure: {err}") from err
-        headers = {AUTHORIZATION_HEADER: f"Bearer {access_token}"}
+        if headers is None:
+            headers = {}
+        if AUTHORIZATION_HEADER not in headers:
+            headers[AUTHORIZATION_HEADER] = f"Bearer {access_token}"
         if not (url.startswith("http://") or url.startswith("https://")):
             url = f"{self._host}/{url}"
         _LOGGER.debug("request[%s]=%s %s", method, url, kwargs.get("params"))
@@ -69,17 +79,23 @@ class AbstractAuth(ABC):
             raise ApiException(f"Error connecting to API: {err}") from err
         return await AbstractAuth._raise_for_status(resp)
 
-    async def get_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
+    async def get_json(
+        self,
+        url: str,
+        data_cls: Type[_T],
+        **kwargs: Any,
+    ) -> _T:
         """Make a get request and return json response."""
         resp = await self.get(url, **kwargs)
         try:
-            result = await resp.json()
+            result = await resp.text()
         except ClientError as err:
             raise ApiException("Server returned malformed response") from err
-        if not isinstance(result, dict):
-            raise ApiException(f"Server return malformed response: {result}")
         _LOGGER.debug("response=%s", result)
-        return result
+        try:
+            return data_cls.from_json(result)
+        except (LookupError, ValueError) as err:
+            raise ApiException(f"Server return malformed response: {result}") from err
 
     async def post(self, url: str, **kwargs: Any) -> aiohttp.ClientResponse:
         """Make a post request."""
@@ -89,17 +105,18 @@ class AbstractAuth(ABC):
             raise ApiException(f"Error connecting to API: {err}") from err
         return await AbstractAuth._raise_for_status(resp)
 
-    async def post_json(self, url: str, **kwargs: Any) -> dict[str, Any]:
+    async def post_json(self, url: str, data_cls: Type[_T], **kwargs: Any) -> _T:
         """Make a post request and return a json response."""
         resp = await self.post(url, **kwargs)
         try:
-            result = await resp.json()
+            result = await resp.text()
         except ClientError as err:
             raise ApiException("Server returned malformed response") from err
-        if not isinstance(result, dict):
-            raise ApiException(f"Server returned malformed response: {result}")
         _LOGGER.debug("response=%s", result)
-        return result
+        try:
+            return data_cls.from_json(result)
+        except (LookupError, ValueError) as err:
+            raise ApiException(f"Server return malformed response: {result}") from err
 
     @classmethod
     async def _raise_for_status(

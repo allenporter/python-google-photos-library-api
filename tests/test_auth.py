@@ -2,6 +2,10 @@
 
 import aiohttp
 import pytest
+from dataclasses import dataclass, field
+
+from mashumaro.mixins.json import DataClassJSONMixin
+from mashumaro import field_options
 
 from google_photos_library_api.auth import AbstractAuth
 from google_photos_library_api.exceptions import (
@@ -10,6 +14,13 @@ from google_photos_library_api.exceptions import (
 )
 
 from .conftest import AuthCallback
+
+
+@dataclass
+class Response(DataClassJSONMixin):
+    """Response from listing media items."""
+
+    some_key: str = field(metadata=field_options(alias="some-key"))
 
 
 class FakeAuth(AbstractAuth):
@@ -43,9 +54,15 @@ async def test_get_json_response_unexpected(auth_cb: AuthCallback) -> None:
     async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
         return aiohttp.web.json_response(["value1", "value2"])
 
+    @dataclass
+    class Response(DataClassJSONMixin):
+        """Response from listing media items."""
+
+        items: list[str]
+
     auth = await auth_cb([("/some-path", handler)])
     with pytest.raises(ApiException):
-        await auth.get_json("some-path")
+        await auth.get_json("some-path", data_cls=Response)
 
 
 async def test_get_json_response(auth_cb: AuthCallback) -> None:
@@ -61,8 +78,10 @@ async def test_get_json_response(auth_cb: AuthCallback) -> None:
         )
 
     auth = await auth_cb([("/some-path", handler)])
-    data = await auth.get_json("some-path", json={"client_id": "some-client-id"})
-    assert data == {"some-key": "some-value"}
+    data = await auth.get_json(
+        "some-path", json={"client_id": "some-client-id"}, data_cls=Response
+    )
+    assert data == Response(some_key="some-value")
 
 
 async def test_post_json_response(auth_cb: AuthCallback) -> None:
@@ -78,8 +97,10 @@ async def test_post_json_response(auth_cb: AuthCallback) -> None:
         )
 
     auth = await auth_cb([("/some-path", handler)])
-    data = await auth.post_json("some-path", json={"client_id": "some-client-id"})
-    assert data == {"some-key": "some-value"}
+    data = await auth.post_json(
+        "some-path", json={"client_id": "some-client-id"}, data_cls=Response
+    )
+    assert data == Response(some_key="some-value")
 
 
 async def test_post_json_response_unexpected(auth_cb: AuthCallback) -> None:
@@ -91,7 +112,7 @@ async def test_post_json_response_unexpected(auth_cb: AuthCallback) -> None:
     auth = await auth_cb([("/some-path", handler)])
 
     with pytest.raises(ApiException):
-        await auth.post_json("some-path")
+        await auth.post_json("some-path", data_cls=Response)
 
 
 async def test_post_json_response_unexpected_text(auth_cb: AuthCallback) -> None:
@@ -103,7 +124,7 @@ async def test_post_json_response_unexpected_text(auth_cb: AuthCallback) -> None
     auth = await auth_cb([("/some-path", handler)])
 
     with pytest.raises(ApiException):
-        await auth.post_json("some-path")
+        await auth.post_json("some-path", data_cls=Response)
 
 
 async def test_get_json_response_bad_request(auth_cb: AuthCallback) -> None:
@@ -141,7 +162,7 @@ async def test_get_json_response_bad_request(auth_cb: AuthCallback) -> None:
         ApiException,
         match=r"Error from API: 400: The specified time range is empty.: Bad Request",
     ):
-        await auth.get_json("some-path")
+        await auth.get_json("some-path", data_cls=Response)
 
     with pytest.raises(
         ApiException,
@@ -153,7 +174,7 @@ async def test_get_json_response_bad_request(auth_cb: AuthCallback) -> None:
         ApiException,
         match=r"Error from API: 400: The specified time range is empty.: Bad Request",
     ):
-        await auth.post_json("some-path")
+        await auth.post_json("some-path", data_cls=Response)
 
 
 async def test_unavailable_error(auth_cb: AuthCallback) -> None:
@@ -165,7 +186,7 @@ async def test_unavailable_error(auth_cb: AuthCallback) -> None:
     auth = await auth_cb([("/some-path", handler)])
 
     with pytest.raises(ApiException):
-        await auth.get_json("some-path")
+        await auth.get_json("some-path", data_cls=Response)
 
 
 async def test_forbidden_error(auth_cb: AuthCallback) -> None:
@@ -177,4 +198,4 @@ async def test_forbidden_error(auth_cb: AuthCallback) -> None:
     auth = await auth_cb([("/some-path", handler)])
 
     with pytest.raises(ApiForbiddenException):
-        await auth.get_json("some-path")
+        await auth.get_json("some-path", data_cls=Response)
