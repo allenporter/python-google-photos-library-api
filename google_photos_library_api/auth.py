@@ -1,4 +1,8 @@
-"""API for Google Photos bound to Home Assistant OAuth."""
+"""API for Google Photos OAuth.
+
+Callers subclass this to provide an asyncio implementation that refreshes
+authentication tokens.
+"""
 
 from http import HTTPStatus
 from abc import ABC, abstractmethod

@@ -1,9 +1,5 @@
 """Tests for the request client library."""
 
-from typing import Awaitable, Callable
-
-from aiohttp.web import Application
-from aiohttp import ClientSession
 import aiohttp
 import pytest
 
@@ -12,6 +8,8 @@ from google_photos_library_api.exceptions import (
     ApiException,
     ApiForbiddenException,
 )
+
+from .conftest import AuthCallback
 
 
 class FakeAuth(AbstractAuth):
@@ -22,9 +20,7 @@ class FakeAuth(AbstractAuth):
         return "some-token"
 
 
-async def test_get_response(
-    aiohttp_client: Callable[[Application], Awaitable[ClientSession]],
-) -> None:
+async def test_get_response(auth_cb: AuthCallback) -> None:
     """Test post that returns json."""
 
     async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
@@ -36,35 +32,23 @@ async def test_get_response(
             }
         )
 
-    app = Application()
-    app.router.add_get("/path-prefix/some-path", handler)
-
-    client = await aiohttp_client(app)
-    auth = FakeAuth(client, "/path-prefix")
+    auth = await auth_cb([("/some-path", handler)])
     data = await auth.get("some-path", json={"client_id": "some-client-id"})
     assert await data.json() == {"some-key": "some-value"}
 
 
-async def test_get_json_response_unexpected(
-    aiohttp_client: Callable[[Application], Awaitable[ClientSession]],
-) -> None:
+async def test_get_json_response_unexpected(auth_cb: AuthCallback) -> None:
     """Test json response with wrong response type."""
 
     async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
         return aiohttp.web.json_response(["value1", "value2"])
 
-    app = Application()
-    app.router.add_get("/path-prefix/some-path", handler)
-
-    client = await aiohttp_client(app)
-    auth = FakeAuth(client, "/path-prefix")
+    auth = await auth_cb([("/some-path", handler)])
     with pytest.raises(ApiException):
         await auth.get_json("some-path")
 
 
-async def test_get_json_response(
-    aiohttp_client: Callable[[Application], Awaitable[ClientSession]],
-) -> None:
+async def test_get_json_response(auth_cb: AuthCallback) -> None:
     """Test post that returns json."""
 
     async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
@@ -76,18 +60,12 @@ async def test_get_json_response(
             }
         )
 
-    app = Application()
-    app.router.add_get("/path-prefix/some-path", handler)
-
-    client = await aiohttp_client(app)
-    auth = FakeAuth(client, "/path-prefix")
+    auth = await auth_cb([("/some-path", handler)])
     data = await auth.get_json("some-path", json={"client_id": "some-client-id"})
     assert data == {"some-key": "some-value"}
 
 
-async def test_post_json_response(
-    aiohttp_client: Callable[[Application], Awaitable[ClientSession]],
-) -> None:
+async def test_post_json_response(auth_cb: AuthCallback) -> None:
     """Test post that returns json."""
 
     async def handler(request: aiohttp.web.Request) -> aiohttp.web.Response:
@@ -99,53 +77,36 @@ async def test_post_json_response(
             }
         )
 
-    app = Application()
-    app.router.add_post("/path-prefix/some-path", handler)
-
-    client = await aiohttp_client(app)
-    auth = FakeAuth(client, "/path-prefix")
+    auth = await auth_cb([("/some-path", handler)])
     data = await auth.post_json("some-path", json={"client_id": "some-client-id"})
     assert data == {"some-key": "some-value"}
 
 
-async def test_post_json_response_unexpected(
-    aiohttp_client: Callable[[Application], Awaitable[ClientSession]],
-) -> None:
+async def test_post_json_response_unexpected(auth_cb: AuthCallback) -> None:
     """Test post that returns wrong json type."""
 
     async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
         return aiohttp.web.json_response(["value1", "value2"])
 
-    app = Application()
-    app.router.add_post("/path-prefix/some-path", handler)
-
-    client = await aiohttp_client(app)
-    auth = FakeAuth(client, "/path-prefix")
+    auth = await auth_cb([("/some-path", handler)])
 
     with pytest.raises(ApiException):
         await auth.post_json("some-path")
 
 
-async def test_post_json_response_unexpected_text(
-    aiohttp_client: Callable[[Application], Awaitable[ClientSession]],
-) -> None:
+async def test_post_json_response_unexpected_text(auth_cb: AuthCallback) -> None:
     """Test post that returns unexpected format."""
 
     async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
         return aiohttp.web.Response(text="body")
 
-    app = Application()
-    app.router.add_post("/path-prefix/some-path", handler)
+    auth = await auth_cb([("/some-path", handler)])
 
-    client = await aiohttp_client(app)
-    auth = FakeAuth(client, "/path-prefix")
     with pytest.raises(ApiException):
         await auth.post_json("some-path")
 
 
-async def test_get_json_response_bad_request(
-    aiohttp_client: Callable[[Application], Awaitable[ClientSession]],
-) -> None:
+async def test_get_json_response_bad_request(auth_cb: AuthCallback) -> None:
     """Test error handling with detailed json response."""
 
     async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
@@ -168,12 +129,7 @@ async def test_get_json_response_bad_request(
             status=400,
         )
 
-    app = Application()
-    app.router.add_get("/path-prefix/some-path", handler)
-    app.router.add_post("/path-prefix/some-path", handler)
-
-    client = await aiohttp_client(app)
-    auth = FakeAuth(client, "/path-prefix")
+    auth = await auth_cb([("/some-path", handler)])
 
     with pytest.raises(
         ApiException,
@@ -200,37 +156,25 @@ async def test_get_json_response_bad_request(
         await auth.post_json("some-path")
 
 
-async def test_unavailable_error(
-    aiohttp_client: Callable[[Application], Awaitable[ClientSession]],
-) -> None:
+async def test_unavailable_error(auth_cb: AuthCallback) -> None:
     """Test of basic request/response handling."""
 
     async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
         return aiohttp.web.Response(status=500)
 
-    app = Application()
-    app.router.add_get("/path-prefix/some-path", handler)
-
-    client = await aiohttp_client(app)
-    auth = FakeAuth(client, "/path-prefix")
+    auth = await auth_cb([("/some-path", handler)])
 
     with pytest.raises(ApiException):
         await auth.get_json("some-path")
 
 
-async def test_forbidden_error(
-    aiohttp_client: Callable[[Application], Awaitable[ClientSession]],
-) -> None:
+async def test_forbidden_error(auth_cb: AuthCallback) -> None:
     """Test request/response handling for 403 status."""
 
     async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
         return aiohttp.web.Response(status=403)
 
-    app = Application()
-    app.router.add_get("/path-prefix/some-path", handler)
-
-    client = await aiohttp_client(app)
-    auth = FakeAuth(client, "/path-prefix")
+    auth = await auth_cb([("/some-path", handler)])
 
     with pytest.raises(ApiForbiddenException):
         await auth.get_json("some-path")
