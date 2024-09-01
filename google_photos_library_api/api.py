@@ -25,7 +25,7 @@ api = api.GooglePhotosLibraryApi(auth)
 result = await api.list_media_items()
 for item in result.media_items:
     print(item.id)
-``` 
+```
 
 """
 
@@ -44,6 +44,7 @@ from .model import (
     UploadResult,
     NewMediaItem,
     UserInfoResult,
+    _ListMediaItemResultModel,
 )
 
 __all__ = [
@@ -86,6 +87,29 @@ class GooglePhotosLibraryApi:
         favorites: bool = False,
     ) -> ListMediaItemResult:
         """Get all MediaItem resources."""
+
+        async def get_next_page(
+            next_page_token: str | None,
+        ) -> _ListMediaItemResultModel:
+            return await self._list_media_items_page(
+                page_size=page_size,
+                page_token=next_page_token,
+                album_id=album_id,
+                favorites=favorites,
+            )
+
+        page_result = await get_next_page(None)
+        result = ListMediaItemResult(page_result, get_next_page)
+        return result
+
+    async def _list_media_items_page(
+        self,
+        page_size: int | None = None,
+        page_token: str | None = None,
+        album_id: str | None = None,
+        favorites: bool = False,
+    ) -> _ListMediaItemResultModel:
+        """Get all MediaItem resources."""
         args: dict[str, Any] = {
             "pageSize": (page_size or DEFAULT_PAGE_SIZE),
             "pageToken": page_token,
@@ -99,13 +123,13 @@ class GooglePhotosLibraryApi:
                 "v1/mediaItems:search",
                 params={"fields": GET_MEDIA_ITEM_FIELDS},
                 json=args,
-                data_cls=ListMediaItemResult,
+                data_cls=_ListMediaItemResultModel,
             )
         return await self._auth.get_json(
             "v1/mediaItems",
             params={"fields": GET_MEDIA_ITEM_FIELDS},
             json=args,
-            data_cls=ListMediaItemResult,
+            data_cls=_ListMediaItemResultModel,
         )
 
     async def upload_content(self, content: bytes, mime_type: str) -> UploadResult:
@@ -140,7 +164,7 @@ class GooglePhotosLibraryApi:
 
     async def get_user_info(self) -> UserInfoResult:
         """Get the user profile info.
-        
+
         This call requires the userinfo.email scope.
         """
         return await self._auth.get_json(USERINFO_API, data_cls=UserInfoResult)
