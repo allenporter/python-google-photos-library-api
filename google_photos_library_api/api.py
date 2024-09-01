@@ -76,11 +76,13 @@ class GooglePhotosLibraryApi:
         """Initialize GooglePhotosLibraryApi."""
         self._auth = auth
 
-    async def get_media_item(self, media_item_id: str) -> MediaItem:
+    async def get_media_item(
+        self, media_item_id: str, fields: str | None = None
+    ) -> MediaItem:
         """Get all MediaItem resources."""
         return await self._auth.get_json(
             f"v1/mediaItems/{media_item_id}",
-            params={"fields": GET_MEDIA_ITEM_FIELDS},
+            params={"fields": (fields or GET_MEDIA_ITEM_FIELDS)},
             data_cls=MediaItem,
         )
 
@@ -90,6 +92,7 @@ class GooglePhotosLibraryApi:
         page_token: str | None = None,
         album_id: str | None = None,
         favorites: bool = False,
+        fields: str | None = None,
     ) -> ListMediaItemResult:
         """Get all MediaItem resources."""
 
@@ -101,6 +104,7 @@ class GooglePhotosLibraryApi:
                 page_token=next_page_token,
                 album_id=album_id,
                 favorites=favorites,
+                fields=fields,
             )
 
         page_result = await get_next_page(None)
@@ -113,6 +117,7 @@ class GooglePhotosLibraryApi:
         page_token: str | None = None,
         album_id: str | None = None,
         favorites: bool = False,
+        fields: str | None = None,
     ) -> _ListMediaItemResultModel:
         """Get all MediaItem resources."""
         args: dict[str, Any] = {
@@ -127,13 +132,13 @@ class GooglePhotosLibraryApi:
                 args["filters"] = {"featureFilter": {"includedFeatures": "FAVORITES"}}
             return await self._auth.post_json(
                 "v1/mediaItems:search",
-                params={"fields": LIST_MEDIA_ITEM_FIELDS},
+                params={"fields": (fields or LIST_MEDIA_ITEM_FIELDS)},
                 json=args,
                 data_cls=_ListMediaItemResultModel,
             )
         return await self._auth.get_json(
             "v1/mediaItems",
-            params={**args, "fields": LIST_MEDIA_ITEM_FIELDS},
+            params={**args, "fields": (fields or LIST_MEDIA_ITEM_FIELDS)},
             data_cls=_ListMediaItemResultModel,
         )
 
@@ -141,6 +146,7 @@ class GooglePhotosLibraryApi:
         self,
         page_size: int | None = None,
         page_token: str | None = None,
+        fields: str | None = None,
     ) -> ListAlbumResult:
         """Get all Album resources."""
 
@@ -150,6 +156,7 @@ class GooglePhotosLibraryApi:
             return await self._list_albums_page(
                 page_size=page_size,
                 page_token=next_page_token,
+                fields=fields,
             )
 
         page_result = await get_next_page(None)
@@ -160,11 +167,12 @@ class GooglePhotosLibraryApi:
         self,
         page_size: int | None = None,
         page_token: str | None = None,
+        fields: str | None = None,
     ) -> _ListAlbumResultModel:
         """Get all Albums resources."""
         params: dict[str, Any] = {
             "pageSize": (page_size or DEFAULT_PAGE_SIZE),
-            "fields": LIST_ALBUMS_FIELDS,
+            "fields": (fields or LIST_ALBUMS_FIELDS),
         }
         if page_token is not None:
             params["pageToken"] = page_token

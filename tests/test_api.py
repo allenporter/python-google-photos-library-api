@@ -74,6 +74,7 @@ async def mock_requests() -> list[aiohttp.web.Request]:
     """Fixture for fake create media items responses."""
     return []
 
+
 @pytest.fixture(name="api")
 async def mock_api(
     auth_cb: AuthCallback,
@@ -137,8 +138,9 @@ async def mock_api(
 
 
 async def test_list_media_items(
-    api: GooglePhotosLibraryApi, list_media_items: list[dict[str, Any]], requests: list[aiohttp.web.Request],
-
+    api: GooglePhotosLibraryApi,
+    list_media_items: list[dict[str, Any]],
+    requests: list[aiohttp.web.Request],
 ) -> None:
     """Test list media_items API."""
 
@@ -150,13 +152,18 @@ async def test_list_media_items(
     assert len(requests) == 1
     assert requests[0].method == "GET"
     assert requests[0].path == "/path-prefix/v1/mediaItems"
-    assert requests[0].query_string == "pageSize=20&fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
+    assert (
+        requests[0].query_string
+        == "pageSize=20&fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
+    )
 
 
 async def test_list_items_in_album(
-    api: GooglePhotosLibraryApi, search_media_items: list[dict[str, Any]], requests: list[aiohttp.web.Request],
+    api: GooglePhotosLibraryApi,
+    search_media_items: list[dict[str, Any]],
+    requests: list[aiohttp.web.Request],
 ) -> None:
-    """Test list media_items API."""
+    """Test list media_items API limited to a specific album."""
 
     search_media_items.append(FAKE_LIST_MEDIA_ITEMS)
     result = await api.list_media_items(album_id="album-id-1")
@@ -166,13 +173,18 @@ async def test_list_items_in_album(
     assert len(requests) == 1
     assert requests[0].method == "POST"
     assert requests[0].path == "/path-prefix/v1/mediaItems:search"
-    assert requests[0].query_string == "fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
+    assert (
+        requests[0].query_string
+        == "fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
+    )
 
 
 async def test_list_favorites(
-    api: GooglePhotosLibraryApi, search_media_items: list[dict[str, Any]], requests: list[aiohttp.web.Request],
+    api: GooglePhotosLibraryApi,
+    search_media_items: list[dict[str, Any]],
+    requests: list[aiohttp.web.Request],
 ) -> None:
-    """Test list media_items API."""
+    """Test list media_items API limited to favorites."""
 
     search_media_items.append(FAKE_LIST_MEDIA_ITEMS)
     result = await api.list_media_items(favorites=True)
@@ -182,13 +194,32 @@ async def test_list_favorites(
     assert len(requests) == 1
     assert requests[0].method == "POST"
     assert requests[0].path == "/path-prefix/v1/mediaItems:search"
-    assert requests[0].query_string == "fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
+    assert (
+        requests[0].query_string
+        == "fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
+    )
 
 
+@pytest.mark.parametrize(
+    ("fields", "expected_fields"),
+    [
+        (
+            None,
+            "nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))",
+        ),
+        (
+            "nextPageToken,mediaItems(id,description)",
+            "nextPageToken,mediaItems(id,description)",
+        ),
+    ],
+    ids=("default_fields", "custom_fields"),
+)
 async def test_list_media_items_paging(
     api: GooglePhotosLibraryApi,
     list_media_items: list[dict[str, Any]],
     requests: list[aiohttp.web.Request],
+    fields: str | None,
+    expected_fields: str,
 ) -> None:
     """Test list media_items API."""
 
@@ -203,7 +234,7 @@ async def test_list_media_items_paging(
             "mediaItems": [FAKE_MEDIA_ITEM2],
         }
     )
-    result = await api.list_media_items()
+    result = await api.list_media_items(fields=fields)
     media_items = []
     async for result_page in result:
         media_items.extend(result_page.media_items)
@@ -214,10 +245,13 @@ async def test_list_media_items_paging(
     assert len(requests) == 2
     assert requests[0].method == "GET"
     assert requests[0].path == "/path-prefix/v1/mediaItems"
-    assert requests[0].query_string == "pageSize=20&fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
+    assert requests[0].query_string == f"pageSize=20&fields={expected_fields}"
     assert requests[1].method == "GET"
     assert requests[1].path == "/path-prefix/v1/mediaItems"
-    assert requests[1].query_string == "pageSize=20&pageToken=next-page-token-1&fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
+    assert (
+        requests[1].query_string
+        == f"pageSize=20&pageToken=next-page-token-1&fields={expected_fields}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -227,10 +261,27 @@ async def test_list_media_items_paging(
         {"album_id": "album-id-1"},
     ],
 )
+@pytest.mark.parametrize(
+    ("fields", "expected_fields"),
+    [
+        (
+            None,
+            "nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))",
+        ),
+        (
+            "nextPageToken,mediaItems(id,description)",
+            "nextPageToken,mediaItems(id,description)",
+        ),
+    ],
+    ids=("default_fields", "custom_fields"),
+)
 async def test_search_items_paging(
     api: GooglePhotosLibraryApi,
     search_media_items: list[dict[str, Any]],
+    requests: list[aiohttp.web.Request],
     list_args: dict[str, Any],
+    fields: str | None,
+    expected_fields: str | None,
 ) -> None:
     """Test list media_items API."""
 
@@ -245,7 +296,7 @@ async def test_search_items_paging(
             "mediaItems": [FAKE_MEDIA_ITEM2],
         }
     )
-    result = await api.list_media_items(**list_args)
+    result = await api.list_media_items(**list_args, fields=fields)
     media_items = []
     async for result_page in result:
         media_items.extend(result_page.media_items)
@@ -253,24 +304,61 @@ async def test_search_items_paging(
         MediaItem(id="media-item-id-1", description="Photo 1"),
         MediaItem(id="media-item-id-2", description="Photo 2"),
     ]
+    assert len(requests) == 2
+    assert requests[0].method == "POST"
+    assert requests[0].path == "/path-prefix/v1/mediaItems:search"
+    assert requests[0].query_string == f"fields={expected_fields}"
+    assert requests[1].method == "POST"
+    assert requests[1].path == "/path-prefix/v1/mediaItems:search"
+    assert requests[1].query_string == f"fields={expected_fields}"
 
 
+@pytest.mark.parametrize(
+    ("fields", "expected_fields"),
+    [
+        (None, "id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video)"),
+        ("id,description", "id,description"),
+    ],
+    ids=("default_fields", "custom_fields"),
+)
 async def test_get_media_item(
-    api: GooglePhotosLibraryApi, get_media_items: list[dict[str, Any]]
+    api: GooglePhotosLibraryApi,
+    get_media_items: list[dict[str, Any]],
+    requests: list[aiohttp.web.Request],
+    fields: str | None,
+    expected_fields: str | None,
 ) -> None:
-    """Test list media_items API."""
+    """Test get media_items API."""
 
     get_media_items.append(FAKE_MEDIA_ITEM)
-    result = await api.get_media_item("media-item-id-1")
+    result = await api.get_media_item("media-item-id-1", fields=fields)
     assert result == MediaItem(id="media-item-id-1", description="Photo 1")
 
+    assert len(requests) == 1
+    assert requests[0].method == "GET"
+    assert requests[0].path == "/path-prefix/v1/mediaItems/media-item-id-1"
+    assert requests[0].query_string == f"fields={expected_fields}"
 
+
+@pytest.mark.parametrize(
+    ("fields", "expected_fields"),
+    [
+        (
+            None,
+            "nextPageToken,albums(id,title,coverPhotoBaseUrl,coverPhotoMediaItemId)",
+        ),
+        ("nextPageToken,albums(id,title)", "nextPageToken,albums(id,title)"),
+    ],
+    ids=("default_fields", "custom_fields"),
+)
 async def test_list_albums(
     api: GooglePhotosLibraryApi,
     list_albums: list[dict[str, Any]],
     requests: list[aiohttp.web.Request],
+    fields: str | None,
+    expected_fields: str,
 ) -> None:
-    """Test list media_items API."""
+    """Test list albums API."""
 
     list_albums.append(
         {
@@ -295,7 +383,7 @@ async def test_list_albums(
             ],
         }
     )
-    result = await api.list_albums()
+    result = await api.list_albums(fields=fields)
     albums = []
     async for result_page in result:
         albums.extend(result_page.albums)
@@ -315,16 +403,19 @@ async def test_list_albums(
     assert len(requests) == 2
     assert requests[0].method == "GET"
     assert requests[0].path == "/path-prefix/v1/albums"
-    assert requests[0].query_string == "pageSize=20&fields=nextPageToken,albums(id,title,coverPhotoBaseUrl,coverPhotoMediaItemId)"
+    assert requests[0].query_string == f"pageSize=20&fields={expected_fields}"
     assert requests[1].method == "GET"
     assert requests[1].path == "/path-prefix/v1/albums"
-    assert requests[1].query_string == "pageSize=20&fields=nextPageToken,albums(id,title,coverPhotoBaseUrl,coverPhotoMediaItemId)&pageToken=next-page-token-1"
+    assert (
+        requests[1].query_string
+        == f"pageSize=20&fields={expected_fields}&pageToken=next-page-token-1"
+    )
 
 
 async def test_upload_items(
     api: GooglePhotosLibraryApi, upload_media_items: list[str]
 ) -> None:
-    """Test list media_items API."""
+    """Test list upload_items API."""
 
     upload_media_items.append("fake-upload-token-1")
     result = await api.upload_content(b"content", "image/jpeg")
@@ -348,7 +439,7 @@ async def test_create_media_items(
     create_media_items: list[dict[str, Any]],
     status: dict[str, Any],
 ) -> None:
-    """Test list media_items API."""
+    """Test list create media items API."""
 
     create_media_items.append(
         {
