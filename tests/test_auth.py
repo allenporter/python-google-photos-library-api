@@ -238,20 +238,6 @@ async def test_error_detail_parse_error(auth_cb: AuthCallback) -> None:
         await auth.get_json("some-path", data_cls=Response)
 
 
-
-async def test_error_detail_parse_error(auth_cb: AuthCallback) -> None:
-    """Test request/response handling for 403 status."""
-
-    async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
-        return aiohttp.web.Response(status=403, text="Plain text error message")
-
-    auth = await auth_cb([("/some-path", handler)])
-
-    with pytest.raises(
-        ApiForbiddenException, match=re.escape("Forbidden response from API (403)")
-    ):
-        await auth.get_json("some-path", data_cls=Response)
-
 async def test_invalid_argument(auth_cb: AuthCallback) -> None:
     """Test request/response handling for 403 status."""
 
