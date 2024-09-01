@@ -20,6 +20,7 @@ from .exceptions import (
     AuthException,
 )
 from .const import LIBRARY_API_URL
+from .model import ErrorResponse, ErrorDetail
 
 __all__ = ["AbstractAuth"]
 
@@ -124,36 +125,33 @@ class AbstractAuth(ABC):
         cls, resp: aiohttp.ClientResponse
     ) -> aiohttp.ClientResponse:
         """Raise exceptions on failure methods."""
-        detail = await cls._error_detail(resp)
+        error_detail = await cls._error_detail(resp)
         try:
             resp.raise_for_status()
         except aiohttp.ClientResponseError as err:
-            detail.append(err.message)
-            err_msg = ": ".join(detail)
+            error_message = f"{err.message} response from API ({resp.status})"
+            if error_detail:
+                error_message += f": {error_detail}"
             if err.status == HTTPStatus.FORBIDDEN:
-                raise ApiForbiddenException(
-                    f"Forbidden response from API: {err_msg}"
-                ) from err
+                raise ApiForbiddenException(error_message)
             if err.status == HTTPStatus.UNAUTHORIZED:
-                raise AuthException(f"Unable to authenticate with API: {err}") from err
-            raise ApiException(err_msg) from err
+                raise AuthException(error_message)
+            raise ApiException(error_message) from err
         except aiohttp.ClientError as err:
             raise ApiException(f"Error from API: {err}") from err
         return resp
 
     @classmethod
-    async def _error_detail(cls, resp: aiohttp.ClientResponse) -> list[str]:
+    async def _error_detail(cls, resp: aiohttp.ClientResponse) -> ErrorDetail | None:
         """Returns an error message string from the APi response."""
         if resp.status < 400:
-            return []
+            return None
         try:
-            result = await resp.json()
-            error = result.get(ERROR, {})
+            result = await resp.text()
         except ClientError:
-            return []
-        message = ["Error from API", f"{resp.status}"]
-        if STATUS in error:
-            message.append(f"{error[STATUS]}")
-        if MESSAGE in error:
-            message.append(error[MESSAGE])
-        return message
+            return None
+        try:
+            error_response = ErrorResponse.from_json(result)
+        except (LookupError, ValueError):
+            return None
+        return error_response.error

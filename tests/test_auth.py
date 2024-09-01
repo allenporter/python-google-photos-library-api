@@ -1,6 +1,7 @@
 """Tests for the request client library."""
 
 import aiohttp
+import re
 import pytest
 from dataclasses import dataclass, field
 
@@ -154,25 +155,33 @@ async def test_get_json_response_bad_request(auth_cb: AuthCallback) -> None:
 
     with pytest.raises(
         ApiException,
-        match=r"Error from API: 400: The specified time range is empty.: Bad Request",
+        match=re.escape(
+            "Bad Request response from API (400): 400: The specified time range is empty."
+        ),
     ):
         await auth.get("some-path")
 
     with pytest.raises(
         ApiException,
-        match=r"Error from API: 400: The specified time range is empty.: Bad Request",
+        match=re.escape(
+            "Bad Request response from API (400): 400: The specified time range is empty."
+        ),
     ):
         await auth.get_json("some-path", data_cls=Response)
 
     with pytest.raises(
         ApiException,
-        match=r"Error from API: 400: The specified time range is empty.: Bad Request",
+        match=re.escape(
+            "Bad Request response from API (400): 400: The specified time range is empty."
+        ),
     ):
         await auth.post("some-path")
 
     with pytest.raises(
         ApiException,
-        match=r"Error from API: 400: The specified time range is empty.: Bad Request",
+        match=re.escape(
+            "Bad Request response from API (400): 400: The specified time range is empty."
+        ),
     ):
         await auth.post_json("some-path", data_cls=Response)
 
@@ -193,15 +202,37 @@ async def test_forbidden_error(auth_cb: AuthCallback) -> None:
     """Test request/response handling for 403 status."""
 
     async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
-        return aiohttp.web.json_response({
-            "error": {
-            "code": 403,
-            "message": "Google Photos API has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/library/photoslibrary.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
-              "status": "PERMISSION_DENIED"
-            }
-        }, status=403)
+        return aiohttp.web.json_response(
+            {
+                "error": {
+                    "code": 403,
+                    "message": "Google Photos API has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/library/photoslibrary.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
+                    "status": "PERMISSION_DENIED",
+                }
+            },
+            status=403,
+        )
 
     auth = await auth_cb([("/some-path", handler)])
 
-    with pytest.raises(ApiForbiddenException, match="Google Photos API has not been used"):
+    with pytest.raises(
+        ApiForbiddenException,
+        match=re.escape(
+            "Forbidden response from API (403): PERMISSION_DENIED (403): Google Photos API has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/library/photoslibrary.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+        ),
+    ):
+        await auth.get_json("some-path", data_cls=Response)
+
+
+async def test_error_detail_parse_error(auth_cb: AuthCallback) -> None:
+    """Test request/response handling for 403 status."""
+
+    async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
+        return aiohttp.web.Response(status=403, text="Plain text error message")
+
+    auth = await auth_cb([("/some-path", handler)])
+
+    with pytest.raises(
+        ApiForbiddenException, match=re.escape("Forbidden response from API (403)")
+    ):
         await auth.get_json("some-path", data_cls=Response)
