@@ -229,8 +229,20 @@ async def test_upload_items(
     assert result == UploadResult(upload_token="fake-upload-token-1")
 
 
+@pytest.mark.parametrize(
+    "status",
+    [
+        {
+            "code": 200,
+            "message": "Success",
+        },
+        {
+            "code": 200,
+        },
+    ]
+)
 async def test_create_media_items(
-    api: GooglePhotosLibraryApi, create_media_items: list[dict[str, Any]]
+    api: GooglePhotosLibraryApi, create_media_items: list[dict[str, Any]], status: dict[str, Any]
 ) -> None:
     """Test list media_items API."""
 
@@ -239,10 +251,7 @@ async def test_create_media_items(
             "newMediaItemResults": [
                 {
                     "uploadToken": "new-upload-token-1",
-                    "status": {
-                        "code": 200,
-                        "message": "Success",
-                    },
+                    "status": status,
                     "mediaItem": FAKE_MEDIA_ITEM,
                 }
             ]
@@ -255,7 +264,7 @@ async def test_create_media_items(
         new_media_item_results=[
             NewMediaItemResult(
                 upload_token="new-upload-token-1",
-                status=Status(code=200, message="Success"),
+                status=Status(**status),
                 media_item=MediaItem(id="media-item-id-1", description="Photo 1"),
             )
         ]
