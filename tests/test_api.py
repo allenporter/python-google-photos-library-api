@@ -12,6 +12,7 @@ from google_photos_library_api.model import (
     UploadResult,
     NewMediaItem,
     SimpleMediaItem,
+    Status,
 )
 from google_photos_library_api.model import MediaItem
 
@@ -238,6 +239,10 @@ async def test_create_media_items(
             "newMediaItemResults": [
                 {
                     "uploadToken": "new-upload-token-1",
+                    "status": {
+                        "code": 200,
+                        "message": "Success",
+                    },
                     "mediaItem": FAKE_MEDIA_ITEM,
                 }
             ]
@@ -250,6 +255,7 @@ async def test_create_media_items(
         new_media_item_results=[
             NewMediaItemResult(
                 upload_token="new-upload-token-1",
+                status=Status(code=200, message="Success"),
                 media_item=MediaItem(id="media-item-id-1", description="Photo 1"),
             )
         ]
