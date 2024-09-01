@@ -117,8 +117,9 @@ class GooglePhotosLibraryApi:
         """Get all MediaItem resources."""
         args: dict[str, Any] = {
             "pageSize": (page_size or DEFAULT_PAGE_SIZE),
-            "pageToken": page_token,
         }
+        if page_token is not None:
+            args["pageToken"] = page_token
         if album_id is not None or favorites:
             if album_id is not None:
                 args["albumId"] = album_id
@@ -132,8 +133,7 @@ class GooglePhotosLibraryApi:
             )
         return await self._auth.get_json(
             "v1/mediaItems",
-            params={"fields": GET_MEDIA_ITEM_FIELDS},
-            json=args,
+            params={**args, "fields": GET_MEDIA_ITEM_FIELDS},
             data_cls=_ListMediaItemResultModel,
         )
 
@@ -162,13 +162,15 @@ class GooglePhotosLibraryApi:
         page_token: str | None = None,
     ) -> _ListAlbumResultModel:
         """Get all Albums resources."""
+        params: dict[str, Any] = {
+            "pageSize": (page_size or DEFAULT_PAGE_SIZE),
+            "fields": LIST_ALBUMS_FIELDS,
+        }
+        if page_token is not None:
+            params["pageToken"] = page_token
         return await self._auth.get_json(
             "v1/albums",
-            params={"fields": LIST_ALBUMS_FIELDS},
-            json={
-                "pageSize": (page_size or DEFAULT_PAGE_SIZE),
-                "pageToken": page_token,
-            },
+            params=params,
             data_cls=_ListAlbumResultModel,
         )
 
