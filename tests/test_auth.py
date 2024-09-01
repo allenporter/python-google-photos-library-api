@@ -193,9 +193,15 @@ async def test_forbidden_error(auth_cb: AuthCallback) -> None:
     """Test request/response handling for 403 status."""
 
     async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
-        return aiohttp.web.Response(status=403)
+        return aiohttp.web.json_response({
+            "error": {
+            "code": 403,
+            "message": "Google Photos API has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/library/photoslibrary.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
+              "status": "PERMISSION_DENIED"
+            }
+        }, status=403)
 
     auth = await auth_cb([("/some-path", handler)])
 
-    with pytest.raises(ApiForbiddenException):
+    with pytest.raises(ApiForbiddenException, match="Google Photos API has not been used"):
         await auth.get_json("some-path", data_cls=Response)
