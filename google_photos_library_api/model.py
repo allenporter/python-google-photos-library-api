@@ -248,7 +248,7 @@ class Status(DataClassJSONMixin):
     code: int
     """The status code, which should be an enum value of google.rpc.Code"""
 
-    message: str
+    message: str | str = None
     """A developer-facing error message, which should be in English"""
 
     details: list[dict[str, Any]] = field(default_factory=list)
