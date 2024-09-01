@@ -20,7 +20,7 @@ from .exceptions import (
     AuthException,
 )
 from .const import LIBRARY_API_URL
-from .model import ErrorResponse, ErrorDetail
+from .model import ErrorResponse, Error
 
 __all__ = ["AbstractAuth"]
 
@@ -142,7 +142,7 @@ class AbstractAuth(ABC):
         return resp
 
     @classmethod
-    async def _error_detail(cls, resp: aiohttp.ClientResponse) -> ErrorDetail | None:
+    async def _error_detail(cls, resp: aiohttp.ClientResponse) -> Error | None:
         """Returns an error message string from the APi response."""
         if resp.status < 400:
             return None
