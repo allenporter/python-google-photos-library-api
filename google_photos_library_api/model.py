@@ -162,7 +162,7 @@ class Album(DataClassDictMixin):
     title: str
     """Title of the album."""
 
-    product_url: str = field(metadata=field_options(alias="productUrl"))
+    product_url: str | None = field(metadata=field_options(alias="productUrl"), default=None)
     """Google Photos URL for the album."""
 
     media_items_count: int | None = field(
