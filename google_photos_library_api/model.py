@@ -165,18 +165,25 @@ class Album(DataClassDictMixin):
     product_url: str = field(metadata=field_options(alias="productUrl"))
     """Google Photos URL for the album."""
 
-    media_items_count: int = field(metadata=field_options(alias="mediaItemsCount"))
+    media_items_count: int | None = field(
+        metadata=field_options(alias="mediaItemsCount"), default=None
+    )
     """Number of media items in the album."""
 
-    cover_photo_base_url: str = field(metadata=field_options(alias="coverPhotoBaseUrl"))
+    cover_photo_base_url: str | None = field(
+        metadata=field_options(alias="coverPhotoBaseUrl"), default=None
+    )
     """Base URL for the cover photo of the album."""
 
-    cover_photo_media_item_id: str = field(
-        metadata=field_options(alias="coverPhotoMediaItemId")
+    cover_photo_media_item_id: str | None = field(
+        metadata=field_options(alias="coverPhotoMediaItemId"),
+        default=None,
     )
     """Identifier for the cover photo of the album."""
 
-    is_writeable: bool = field(metadata=field_options(alias="isWriteable"))
+    is_writeable: bool | None = field(
+        metadata=field_options(alias="isWriteable"), default=None
+    )
     """Whether the album is writable."""
 
 
@@ -228,6 +235,53 @@ class ListMediaItemResult:
     @property
     def next_page_token(self) -> str | None:
         """Token for the next page of results."""
+        return self._response.next_page_token
+
+    async def __aiter__(self) -> AsyncIterator[Self]:
+        """Async iterator to traverse through pages of responses."""
+        response = self
+        while response is not None:
+            yield response
+            if not response.next_page_token or not self._get_next_page:
+                break
+            page_result = await self._get_next_page(response.next_page_token)
+            response = self.__class__(page_result)
+
+
+@dataclass
+class _ListAlbumResultModel(DataClassJSONMixin):
+    """Api response containing a list of albums requested."""
+
+    albums: list[Album] = field(default_factory=list)
+    """List of albums shown in the Albums tab of the user's Google Photos app."""
+
+    next_page_token: str | None = field(
+        metadata=field_options(alias="nextPageToken"), default=None
+    )
+    """Token to use to get the next set of albums."""
+
+
+class ListAlbumResult:
+    """Api response containing a list of albums requested."""
+
+    def __init__(
+        self,
+        response: _ListAlbumResultModel,
+        get_next_page: (
+            Callable[[str | None], Awaitable[_ListAlbumResultModel]] | None
+        ) = None,
+    ):
+        self._response = response
+        self._get_next_page = get_next_page
+
+    @property
+    def albums(self) -> list[Album]:
+        """List of albums shown in the Albums tab of the user's Google Photos app."""
+        return self._response.albums
+
+    @property
+    def next_page_token(self) -> str | None:
+        """Token to use to get the next set of albums."""
         return self._response.next_page_token
 
     async def __aiter__(self) -> AsyncIterator[Self]:

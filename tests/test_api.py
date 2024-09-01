@@ -14,7 +14,7 @@ from google_photos_library_api.model import (
     SimpleMediaItem,
     Status,
 )
-from google_photos_library_api.model import MediaItem
+from google_photos_library_api.model import MediaItem, Album
 
 
 from .conftest import AuthCallback
@@ -51,6 +51,12 @@ async def mock_search_media_items() -> list[dict[str, Any]]:
     return []
 
 
+@pytest.fixture(name="list_albums")
+async def mock_list_albums() -> list[dict[str, Any]]:
+    """Fixture for fake list albums responses."""
+    return []
+
+
 @pytest.fixture(name="upload_media_items")
 async def mock_upload_media_items() -> list[str]:
     """Fixture for fake list upload endpoint responses."""
@@ -69,6 +75,7 @@ async def mock_api(
     get_media_items: list[dict[str, Any]],
     list_media_items: list[dict[str, Any]],
     search_media_items: list[dict[str, Any]],
+    list_albums: list[dict[str, Any]],
     upload_media_items: list[str],
     create_media_items: list[dict[str, Any]],
 ) -> GooglePhotosLibraryApi:
@@ -89,6 +96,11 @@ async def mock_api(
     ) -> aiohttp.web.Response:
         return aiohttp.web.json_response(search_media_items.pop(0))
 
+    async def list_albums_handler(
+        request: aiohttp.web.Request,
+    ) -> aiohttp.web.Response:
+        return aiohttp.web.json_response(list_albums.pop(0))
+
     async def upload_media_items_handler(
         request: aiohttp.web.Request,
     ) -> aiohttp.web.Response:
@@ -104,6 +116,7 @@ async def mock_api(
             ("/v1/mediaItems", list_media_items_handler),
             ("/v1/mediaItems/{media_item_id}", get_media_items_handler),
             ("/v1/mediaItems:search", search_media_items_handler),
+            ("/v1/albums", list_albums_handler),
             ("/v1/uploads", upload_media_items_handler),
             ("/v1/mediaItems:batchCreate", create_media_items_handler),
         ]
@@ -219,6 +232,53 @@ async def test_get_media_item(
     assert result == MediaItem(id="media-item-id-1", description="Photo 1")
 
 
+async def test_list_albums(
+    api: GooglePhotosLibraryApi,
+    list_albums: list[dict[str, Any]],
+) -> None:
+    """Test list media_items API."""
+
+    list_albums.append(
+        {
+            "albums": [
+                {
+                    "id": "album-id-1",
+                    "title": "Album 1",
+                    "productUrl": "http://photos.google.com/album/album-id-1",
+                }
+            ],
+            "nextPageToken": "next-page-token-1",
+        }
+    )
+    list_albums.append(
+        {
+            "albums": [
+                {
+                    "id": "album-id-2",
+                    "title": "Album 2",
+                    "productUrl": "http://photos.google.com/album/album-id-2",
+                }
+            ],
+        }
+    )
+    result = await api.list_albums()
+    albums = []
+    async for result_page in result:
+        albums.extend(result_page.albums)
+    assert albums == [
+        Album(
+            id="album-id-1",
+            title="Album 1",
+            product_url="http://photos.google.com/album/album-id-1",
+        ),
+        Album(
+            id="album-id-2",
+            title="Album 2",
+            product_url="http://photos.google.com/album/album-id-2",
+        ),
+    ]
+
+
 async def test_upload_items(
     api: GooglePhotosLibraryApi, upload_media_items: list[str]
 ) -> None:
@@ -239,10 +299,12 @@ async def test_upload_items(
         {
             "code": 200,
         },
-    ]
+    ],
 )
 async def test_create_media_items(
-    api: GooglePhotosLibraryApi, create_media_items: list[dict[str, Any]], status: dict[str, Any]
+    api: GooglePhotosLibraryApi,
+    create_media_items: list[dict[str, Any]],
+    status: dict[str, Any],
 ) -> None:
     """Test list media_items API."""
 
