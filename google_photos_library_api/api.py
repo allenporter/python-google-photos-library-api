@@ -45,6 +45,8 @@ from .model import (
     NewMediaItem,
     UserInfoResult,
     _ListMediaItemResultModel,
+    _ListAlbumResultModel,
+    ListAlbumResult,
 )
 
 __all__ = [
@@ -61,6 +63,9 @@ GET_MEDIA_ITEM_FIELDS = (
     "id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video)"
 )
 LIST_MEDIA_ITEM_FIELDS = f"nextPageToken,mediaItems({GET_MEDIA_ITEM_FIELDS})"
+LIST_ALBUMS_FIELDS = (
+    "nextPageToken,albums(id,title,coverPhotoBaseUrl,coverPhotoMediaItemId)"
+)
 USERINFO_API = "https://www.googleapis.com/oauth2/v1/userinfo"
 
 
@@ -130,6 +135,41 @@ class GooglePhotosLibraryApi:
             params={"fields": GET_MEDIA_ITEM_FIELDS},
             json=args,
             data_cls=_ListMediaItemResultModel,
+        )
+
+    async def list_albums(
+        self,
+        page_size: int | None = None,
+        page_token: str | None = None,
+    ) -> ListAlbumResult:
+        """Get all Album resources."""
+
+        async def get_next_page(
+            next_page_token: str | None,
+        ) -> _ListAlbumResultModel:
+            return await self._list_albums_page(
+                page_size=page_size,
+                page_token=next_page_token,
+            )
+
+        page_result = await get_next_page(None)
+        result = ListAlbumResult(page_result, get_next_page)
+        return result
+
+    async def _list_albums_page(
+        self,
+        page_size: int | None = None,
+        page_token: str | None = None,
+    ) -> _ListAlbumResultModel:
+        """Get all Albums resources."""
+        return await self._auth.get_json(
+            "v1/albums",
+            params={"fields": LIST_ALBUMS_FIELDS},
+            json={
+                "pageSize": (page_size or DEFAULT_PAGE_SIZE),
+                "pageToken": page_token,
+            },
+            data_cls=_ListAlbumResultModel,
         )
 
     async def upload_content(self, content: bytes, mime_type: str) -> UploadResult:
