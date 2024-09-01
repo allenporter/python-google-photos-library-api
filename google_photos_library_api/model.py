@@ -13,6 +13,7 @@ __all__ = [
     "Photo",
     "Video",
     "ContributorInfo",
+    "UploadResult",
     "CreateMediaItemsResult",
     "NewMediaItemResult",
     "Status",
