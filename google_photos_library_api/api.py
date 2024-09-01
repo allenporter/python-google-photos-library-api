@@ -127,13 +127,13 @@ class GooglePhotosLibraryApi:
                 args["filters"] = {"featureFilter": {"includedFeatures": "FAVORITES"}}
             return await self._auth.post_json(
                 "v1/mediaItems:search",
-                params={"fields": GET_MEDIA_ITEM_FIELDS},
+                params={"fields": LIST_MEDIA_ITEM_FIELDS},
                 json=args,
                 data_cls=_ListMediaItemResultModel,
             )
         return await self._auth.get_json(
             "v1/mediaItems",
-            params={**args, "fields": GET_MEDIA_ITEM_FIELDS},
+            params={**args, "fields": LIST_MEDIA_ITEM_FIELDS},
             data_cls=_ListMediaItemResultModel,
         )
 
