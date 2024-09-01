@@ -370,12 +370,13 @@ class CreateMediaItemsResult(DataClassJSONMixin):
 
 
 @dataclass
-class ErrorDetail:
+class Error:
     """Error details from the API response."""
 
     status: str | None = None
     code: int | None = None
     message: str | None = None
+    details: list[dict[str, Any]] | None = field(default_factory=list)
 
     def __str__(self) -> str:
         """Return a string representation of the error details."""
@@ -391,6 +392,8 @@ class ErrorDetail:
             if error_message:
                 error_message += ": "
             error_message += self.message
+        if self.details:
+            error_message += f"\nError details: ({self.details})"
         return error_message
 
 
@@ -398,4 +401,4 @@ class ErrorDetail:
 class ErrorResponse(DataClassJSONMixin):
     """A response message that contains an error message."""
 
-    error: ErrorDetail | None = None
+    error: Error | None = None

@@ -236,3 +236,54 @@ async def test_error_detail_parse_error(auth_cb: AuthCallback) -> None:
         ApiForbiddenException, match=re.escape("Forbidden response from API (403)")
     ):
         await auth.get_json("some-path", data_cls=Response)
+
+
+
+async def test_error_detail_parse_error(auth_cb: AuthCallback) -> None:
+    """Test request/response handling for 403 status."""
+
+    async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
+        return aiohttp.web.Response(status=403, text="Plain text error message")
+
+    auth = await auth_cb([("/some-path", handler)])
+
+    with pytest.raises(
+        ApiForbiddenException, match=re.escape("Forbidden response from API (403)")
+    ):
+        await auth.get_json("some-path", data_cls=Response)
+
+async def test_invalid_argument(auth_cb: AuthCallback) -> None:
+    """Test request/response handling for 403 status."""
+
+    async def handler(_: aiohttp.web.Request) -> aiohttp.web.Response:
+        return aiohttp.web.json_response(
+            {
+                "error": {
+                    "code": 400,
+                    "message": "Request contains an invalid argument.",
+                    "status": "INVALID_ARGUMENT",
+                    "details": [
+                        {
+                            "@type": "type.googleapis.com/google.rpc.BadRequest",
+                            "fieldViolations": [
+                                {
+                                    "field": "id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video)",
+                                    "description": "Error expanding 'fields' parameter. Cannot find matching fields for path 'id'."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            status=400,
+        )
+
+    auth = await auth_cb([("/some-path", handler)])
+
+    with pytest.raises(
+        ApiException,
+        match=re.escape(
+            "Bad Request response from API (400): INVALID_ARGUMENT (400): Request contains an invalid argument."
+        ) + "\nError details: .*",
+    ):
+        await auth.get_json("some-path", data_cls=Response)
