@@ -128,14 +128,15 @@ class AbstractAuth(ABC):
         try:
             resp.raise_for_status()
         except aiohttp.ClientResponseError as err:
+            detail.append(err.message)
+            err_msg = ": ".join(detail)
             if err.status == HTTPStatus.FORBIDDEN:
                 raise ApiForbiddenException(
-                    f"Forbidden response from API: {err}"
+                    f"Forbidden response from API: {err_msg}"
                 ) from err
             if err.status == HTTPStatus.UNAUTHORIZED:
                 raise AuthException(f"Unable to authenticate with API: {err}") from err
-            detail.append(err.message)
-            raise ApiException(": ".join(detail)) from err
+            raise ApiException(err_msg) from err
         except aiohttp.ClientError as err:
             raise ApiException(f"Error from API: {err}") from err
         return resp
