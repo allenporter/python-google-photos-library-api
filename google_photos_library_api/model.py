@@ -24,22 +24,34 @@ __all__ = [
 class Photo(DataClassDictMixin):
     """Metadata for a photo media item."""
 
-    camera_make: str | None = field(metadata=field_options(alias="cameraMake"), default=None)
+    camera_make: str | None = field(
+        metadata=field_options(alias="cameraMake"), default=None
+    )
     """Make of the camera that took the photo."""
 
-    camera_model: str | None = field(metadata=field_options(alias="cameraModel"), default=None)
+    camera_model: str | None = field(
+        metadata=field_options(alias="cameraModel"), default=None
+    )
     """Model of the camera that took the photo."""
 
-    focal_length: float | None = field(metadata=field_options(alias="focalLength"), default=None)
+    focal_length: float | None = field(
+        metadata=field_options(alias="focalLength"), default=None
+    )
     """Focal length of the camera lens used to take the photo."""
 
-    aperture_f_number: float | None = field(metadata=field_options(alias="apertureFNumber"), default=None)
+    aperture_f_number: float | None = field(
+        metadata=field_options(alias="apertureFNumber"), default=None
+    )
     """Aperture f number of the camera lens used to take the photo."""
 
-    iso_equivalent: int | None = field(metadata=field_options(alias="isoEquivalent"), default=None)
+    iso_equivalent: int | None = field(
+        metadata=field_options(alias="isoEquivalent"), default=None
+    )
     """ISO value that the camera used to take the photo."""
 
-    exposure_time: str | None = field(metadata=field_options(alias="exposureTime"), default=None)
+    exposure_time: str | None = field(
+        metadata=field_options(alias="exposureTime"), default=None
+    )
     """Exposure time (duraton like '3.5s') of the camera lens aperture when the photo was taken."""
 
 
@@ -47,16 +59,20 @@ class Photo(DataClassDictMixin):
 class Video(DataClassDictMixin):
     """Metadata for a video media item."""
 
-    camera_make: str | None = field(metadata=field_options(alias="cameraMake"), default=None)
+    camera_make: str | None = field(
+        metadata=field_options(alias="cameraMake"), default=None
+    )
     """Make of the camera that took the video."""
 
-    camera_model: str | None = field(metadata=field_options(alias="cameraModel"), default=None)
+    camera_model: str | None = field(
+        metadata=field_options(alias="cameraModel"), default=None
+    )
     """Model of the camera that took the video."""
 
     fps: str | None = None
     """Frames per second of the video."""
 
-    status: str | None  = None
+    status: str | None = None
     """Status of the video."""
 
 
@@ -64,7 +80,9 @@ class Video(DataClassDictMixin):
 class MediaMetadata(DataClassDictMixin):
     """Metadata for a media item."""
 
-    creation_time: str | None = field(metadata=field_options(alias="creationTime"), default=None)
+    creation_time: str | None = field(
+        metadata=field_options(alias="creationTime"), default=None
+    )
     """Creation time of the media item."""
 
     width: int | None = None
@@ -76,7 +94,7 @@ class MediaMetadata(DataClassDictMixin):
     photo: Photo | None = None
     """Metadata for a photo media item."""
 
-    video: Video| None = None
+    video: Video | None = None
     """Metadata for a video media item."""
 
 
@@ -257,3 +275,35 @@ class CreateMediaItemsResult(DataClassJSONMixin):
         metadata=field_options(alias="newMediaItemResults")
     )
     """List of created media items."""
+
+
+@dataclass
+class ErrorDetail:
+    """Error details from the API response."""
+
+    status: str | None = None
+    code: int | None = None
+    message: str | None = None
+
+    def __str__(self) -> str:
+        """Return a string representation of the error details."""
+        error_message = ""
+        if self.status:
+            error_message += self.status
+        if self.code:
+            if error_message:
+                error_message += f" ({self.code})"
+            else:
+                error_message += str(self.code)
+        if self.message:
+            if error_message:
+                error_message += ": "
+            error_message += self.message
+        return error_message
+
+
+@dataclass
+class ErrorResponse(DataClassJSONMixin):
+    """A response message that contains an error message."""
+
+    error: ErrorDetail | None = None
