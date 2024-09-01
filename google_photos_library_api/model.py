@@ -24,36 +24,39 @@ __all__ = [
 class Photo(DataClassDictMixin):
     """Metadata for a photo media item."""
 
-    camera_make: str = field(metadata=field_options(alias="cameraMake"))
+    camera_make: str | None = field(metadata=field_options(alias="cameraMake"), default=None)
     """Make of the camera that took the photo."""
 
-    camera_model: str = field(metadata=field_options(alias="cameraModel"))
+    camera_model: str | None = field(metadata=field_options(alias="cameraModel"), default=None)
     """Model of the camera that took the photo."""
 
-    focal_length: str = field(metadata=field_options(alias="focalLength"))
+    focal_length: float | None = field(metadata=field_options(alias="focalLength"), default=None)
     """Focal length of the camera lens used to take the photo."""
 
-    aperture_f_number: str = field(metadata=field_options(alias="apertureFNumber"))
+    aperture_f_number: float | None = field(metadata=field_options(alias="apertureFNumber"), default=None)
     """Aperture f number of the camera lens used to take the photo."""
 
-    iso_equivalent: str = field(metadata=field_options(alias="isoEquivalent"))
+    iso_equivalent: int | None = field(metadata=field_options(alias="isoEquivalent"), default=None)
     """ISO value that the camera used to take the photo."""
+
+    exposure_time: str | None = field(metadata=field_options(alias="exposureTime"), default=None)
+    """Exposure time (duraton like '3.5s') of the camera lens aperture when the photo was taken."""
 
 
 @dataclass
 class Video(DataClassDictMixin):
     """Metadata for a video media item."""
 
-    camera_make: str = field(metadata=field_options(alias="cameraMake"))
+    camera_make: str | None = field(metadata=field_options(alias="cameraMake"), default=None)
     """Make of the camera that took the video."""
 
-    camera_model: str = field(metadata=field_options(alias="cameraModel"))
+    camera_model: str | None = field(metadata=field_options(alias="cameraModel"), default=None)
     """Model of the camera that took the video."""
 
-    fps: str
+    fps: str | None = None
     """Frames per second of the video."""
 
-    status: str
+    status: str | None  = None
     """Status of the video."""
 
 
@@ -61,19 +64,19 @@ class Video(DataClassDictMixin):
 class MediaMetadata(DataClassDictMixin):
     """Metadata for a media item."""
 
-    creation_time: str = field(metadata=field_options(alias="creationTime"))
+    creation_time: str | None = field(metadata=field_options(alias="creationTime"), default=None)
     """Creation time of the media item."""
 
-    width: str
+    width: int | None = None
     """Width of the media item in pixels."""
 
-    height: str
+    height: int | None = None
     """Height of the media item in pixels."""
 
-    photo: Photo
+    photo: Photo | None = None
     """Metadata for a photo media item."""
 
-    video: Video
+    video: Video| None = None
     """Metadata for a video media item."""
 
 
@@ -97,7 +100,7 @@ class MediaItem(DataClassJSONMixin):
     id: str
     """Identifier for the media item, used between sessions to identify this media item."""
 
-    description: str
+    description: str | None = None
     """Description of the media item, shown to the user in the item's info section in the Google Photos app."""
 
     product_url: str | None = field(
