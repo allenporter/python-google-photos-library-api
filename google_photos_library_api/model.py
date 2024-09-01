@@ -15,6 +15,7 @@ __all__ = [
     "ContributorInfo",
     "UploadResult",
     "NewMediaItem",
+    "SimpleMediaItem",
     "CreateMediaItemsResult",
     "NewMediaItemResult",
     "Status",
