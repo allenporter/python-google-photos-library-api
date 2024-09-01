@@ -180,9 +180,7 @@ async def test_create_media_items(
     )
     result = await api.create_media_items(
         [
-            NewMediaItem(
-                simple_media_item=[SimpleMediaItem(upload_token="new-upload-token-1")]
-            )
+            NewMediaItem(SimpleMediaItem(upload_token="new-upload-token-1"))
         ]
     )
     assert result == CreateMediaItemsResult(

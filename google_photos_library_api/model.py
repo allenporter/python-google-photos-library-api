@@ -237,7 +237,7 @@ class SimpleMediaItem:
 class NewMediaItem(DataClassDictMixin):
     """New media item to create."""
 
-    simple_media_item: list[SimpleMediaItem] = field(
+    simple_media_item: SimpleMediaItem = field(
         metadata=field_options(alias="simpleMediaItem")
     )
     """Simple media item to create."""
