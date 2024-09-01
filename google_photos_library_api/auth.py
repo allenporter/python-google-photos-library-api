@@ -21,6 +21,7 @@ from .exceptions import (
 )
 from .const import LIBRARY_API_URL
 
+__all__ = ["AbstractAuth"]
 
 _LOGGER = logging.getLogger(__name__)
 

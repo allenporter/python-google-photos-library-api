@@ -1,4 +1,33 @@
-"""API for Google Photos bound to Home Assistant OAuth."""
+"""API for Google Photos bound to Home Assistant OAuth.
+
+Callers subclass this to provide an asyncio implementation that handles
+refreshing authentication tokens. You then pass in the auth object to the
+GooglePhotosLibraryApi object to make authenticated calls to the Google Photos
+Library API.
+
+Example usage:
+```python
+from aiohttp import ClientSession
+from google_photos_library_api import api
+from google_photos_library_api import auth
+
+class GooglePhotosAuth(auth.AbstractAuth):
+    '''Provide OAuth for Google Photos.'''
+
+    async def async_get_access_token(self) -> str:
+        # Your auth implementation details are here
+
+# Create a client library
+auth = GooglePhotosAuth()
+api = api.GooglePhotosLibraryApi(auth)
+
+# List all media items
+result = await api.list_media_items()
+for item in result.media_items:
+    print(item.id)
+``` 
+
+"""
 
 import logging
 from typing import Any
@@ -40,10 +69,6 @@ class GooglePhotosLibraryApi:
     def __init__(self, auth: AbstractAuth) -> None:
         """Initialize GooglePhotosLibraryApi."""
         self._auth = auth
-
-    async def get_user_info(self) -> UserInfoResult:
-        """Get the user profile info."""
-        return await self._auth.get_json(USERINFO_API, data_cls=UserInfoResult)
 
     async def get_media_item(self, media_item_id: str) -> MediaItem:
         """Get all MediaItem resources."""
@@ -112,6 +137,13 @@ class GooglePhotosLibraryApi:
             json=request,
             data_cls=CreateMediaItemsResult,
         )
+
+    async def get_user_info(self) -> UserInfoResult:
+        """Get the user profile info.
+        
+        This call requires the userinfo.email scope.
+        """
+        return await self._auth.get_json(USERINFO_API, data_cls=UserInfoResult)
 
 
 def _upload_headers(mime_type: str) -> dict[str, Any]:
