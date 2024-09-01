@@ -1,7 +1,8 @@
 """Google Photos Library API Data Model."""
 
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Self
 
 from mashumaro import DataClassDictMixin, field_options
 from mashumaro.mixins.json import DataClassJSONMixin
@@ -194,8 +195,8 @@ class UserInfoResult(DataClassJSONMixin):
 
 
 @dataclass
-class ListMediaItemResult(DataClassJSONMixin):
-    """Response from listing media items."""
+class _ListMediaItemResultModel(DataClassJSONMixin):
+    """Api response containing a list of events."""
 
     media_items: list[MediaItem] = field(metadata=field_options(alias="mediaItems"))
     """List of media items."""
@@ -204,6 +205,40 @@ class ListMediaItemResult(DataClassJSONMixin):
         metadata=field_options(alias="nextPageToken"), default=None
     )
     """Token for the next page of results."""
+
+
+class ListMediaItemResult:
+    """Response from listing media items."""
+
+    def __init__(
+        self,
+        response: _ListMediaItemResultModel,
+        get_next_page: (
+            Callable[[str | None], Awaitable[_ListMediaItemResultModel]] | None
+        ) = None,
+    ):
+        self._response = response
+        self._get_next_page = get_next_page
+
+    @property
+    def media_items(self) -> list[MediaItem]:
+        """List of media items."""
+        return self._response.media_items
+
+    @property
+    def next_page_token(self) -> str | None:
+        """Token for the next page of results."""
+        return self._response.next_page_token
+
+    async def __aiter__(self) -> AsyncIterator[Self]:
+        """Async iterator to traverse through pages of responses."""
+        response = self
+        while response is not None:
+            yield response
+            if not response.next_page_token or not self._get_next_page:
+                break
+            page_result = await self._get_next_page(response.next_page_token)
+            response = self.__class__(page_result)
 
 
 @dataclass

@@ -7,7 +7,6 @@ import aiohttp
 
 from google_photos_library_api.api import GooglePhotosLibraryApi
 from google_photos_library_api.model import (
-    ListMediaItemResult,
     CreateMediaItemsResult,
     NewMediaItemResult,
     UploadResult,
@@ -23,6 +22,10 @@ from .conftest import AuthCallback
 FAKE_MEDIA_ITEM = {
     "id": "media-item-id-1",
     "description": "Photo 1",
+}
+FAKE_MEDIA_ITEM2 = {
+    "id": "media-item-id-2",
+    "description": "Photo 2",
 }
 FAKE_LIST_MEDIA_ITEMS = {
     "mediaItems": [FAKE_MEDIA_ITEM],
@@ -114,9 +117,9 @@ async def test_list_media_items(
 
     list_media_items.append(FAKE_LIST_MEDIA_ITEMS)
     result = await api.list_media_items()
-    assert result == ListMediaItemResult(
-        media_items=[MediaItem(id="media-item-id-1", description="Photo 1")]
-    )
+    assert result.media_items == [
+        MediaItem(id="media-item-id-1", description="Photo 1")
+    ]
 
 
 async def test_list_items_in_album(
@@ -126,9 +129,9 @@ async def test_list_items_in_album(
 
     search_media_items.append(FAKE_LIST_MEDIA_ITEMS)
     result = await api.list_media_items(album_id="album-id-1")
-    assert result == ListMediaItemResult(
-        media_items=[MediaItem(id="media-item-id-1", description="Photo 1")]
-    )
+    assert result.media_items == [
+        MediaItem(id="media-item-id-1", description="Photo 1")
+    ]
 
 
 async def test_list_favorites(
@@ -138,9 +141,71 @@ async def test_list_favorites(
 
     search_media_items.append(FAKE_LIST_MEDIA_ITEMS)
     result = await api.list_media_items(favorites=True)
-    assert result == ListMediaItemResult(
-        media_items=[MediaItem(id="media-item-id-1", description="Photo 1")]
+    assert result.media_items == [
+        MediaItem(id="media-item-id-1", description="Photo 1")
+    ]
+
+
+async def test_list_media_items_paging(
+    api: GooglePhotosLibraryApi,
+    list_media_items: list[dict[str, Any]],
+) -> None:
+    """Test list media_items API."""
+
+    list_media_items.append(
+        {
+            "mediaItems": [FAKE_MEDIA_ITEM],
+            "nextPageToken": "next-page-token-1",
+        }
     )
+    list_media_items.append(
+        {
+            "mediaItems": [FAKE_MEDIA_ITEM2],
+        }
+    )
+    result = await api.list_media_items()
+    media_items = []
+    async for result_page in result:
+        media_items.extend(result_page.media_items)
+    assert media_items == [
+        MediaItem(id="media-item-id-1", description="Photo 1"),
+        MediaItem(id="media-item-id-2", description="Photo 2"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "list_args",
+    [
+        {"favorites": True},
+        {"album_id": "album-id-1"},
+    ],
+)
+async def test_search_items_paging(
+    api: GooglePhotosLibraryApi,
+    search_media_items: list[dict[str, Any]],
+    list_args: dict[str, Any],
+) -> None:
+    """Test list media_items API."""
+
+    search_media_items.append(
+        {
+            "mediaItems": [FAKE_MEDIA_ITEM],
+            "nextPageToken": "next-page-token-1",
+        }
+    )
+    search_media_items.append(
+        {
+            "mediaItems": [FAKE_MEDIA_ITEM2],
+        }
+    )
+    result = await api.list_media_items(**list_args)
+    media_items = []
+    async for result_page in result:
+        media_items.extend(result_page.media_items)
+    assert media_items == [
+        MediaItem(id="media-item-id-1", description="Photo 1"),
+        MediaItem(id="media-item-id-2", description="Photo 2"),
+    ]
 
 
 async def test_get_media_item(
@@ -179,9 +244,7 @@ async def test_create_media_items(
         }
     )
     result = await api.create_media_items(
-        [
-            NewMediaItem(SimpleMediaItem(upload_token="new-upload-token-1"))
-        ]
+        [NewMediaItem(SimpleMediaItem(upload_token="new-upload-token-1"))]
     )
     assert result == CreateMediaItemsResult(
         new_media_item_results=[
