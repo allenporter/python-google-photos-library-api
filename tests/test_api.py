@@ -177,18 +177,28 @@ async def test_get_user_info(
     )
 
 
+@pytest.mark.parametrize(
+    ("list_media_items_requests", "expected_result", "expected_page_token"),
+    [
+        ([FAKE_LIST_MEDIA_ITEMS], [MediaItem(id="media-item-id-1", description="Photo 1")], None),
+        ([{}], [], None),
+        ([{"nextPageToken": "example-token-1"}], [], "example-token-1"),
+    ]
+)
 async def test_list_media_items(
     api: GooglePhotosLibraryApi,
     list_media_items: list[dict[str, Any]],
     requests: list[aiohttp.web.Request],
+    list_media_items_requests: list[dict[str, Any]],
+    expected_result: list[MediaItem],
+    expected_page_token: str | None,
 ) -> None:
     """Test list media_items API."""
 
-    list_media_items.append(FAKE_LIST_MEDIA_ITEMS)
+    list_media_items.extend(list_media_items_requests)
     result = await api.list_media_items()
-    assert result.media_items == [
-        MediaItem(id="media-item-id-1", description="Photo 1")
-    ]
+    assert result.media_items == expected_result
+    assert result.next_page_token == expected_page_token
     assert len(requests) == 1
     assert requests[0].method == "GET"
     assert requests[0].path == "/path-prefix/v1/mediaItems"
@@ -196,6 +206,7 @@ async def test_list_media_items(
         requests[0].query_string
         == "pageSize=20&fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
     )
+
 
 
 async def test_list_items_in_album(
