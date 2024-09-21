@@ -134,19 +134,15 @@ class GooglePhotosLibraryApi:
         if page_token is not None:
             args["pageToken"] = page_token
         if album_id is not None:
-            if album_id is not None:
-                args["albumId"] = album_id
-            return await self._auth.post_json(
-                "v1/mediaItems:search",
-                params={"fields": (fields or LIST_MEDIA_ITEM_FIELDS)},
-                json=args,
-                data_cls=_ListMediaItemResultModel,
-            )
-        return await self._auth.get_json(
-            "v1/mediaItems",
-            params={**args, "fields": (fields or LIST_MEDIA_ITEM_FIELDS)},
+            args["albumId"] = album_id
+        args["filters"] = {"excludeNonAppCreatedData": True}
+        return await self._auth.post_json(
+            "v1/mediaItems:search",
+            params={"fields": (fields or LIST_MEDIA_ITEM_FIELDS)},
+            json=args,
             data_cls=_ListMediaItemResultModel,
         )
+
 
     async def list_albums(
         self,
@@ -179,6 +175,7 @@ class GooglePhotosLibraryApi:
         params: dict[str, Any] = {
             "pageSize": (page_size or DEFAULT_PAGE_SIZE),
             "fields": (fields or LIST_ALBUMS_FIELDS),
+            "excludeNonAppCreatedData": "true",
         }
         if page_token is not None:
             params["pageToken"] = page_token
@@ -201,7 +198,7 @@ class GooglePhotosLibraryApi:
             json=request,
             data_cls=Album,
         )
-    
+
     async def update_album(
         self,
         album: NewAlbum,

@@ -206,7 +206,7 @@ async def test_get_user_info(
 )
 async def test_list_media_items(
     api: GooglePhotosLibraryApi,
-    list_media_items: list[dict[str, Any]],
+    search_media_items: list[dict[str, Any]],
     requests: list[aiohttp.web.Request],
     list_media_items_requests: list[dict[str, Any]],
     expected_result: list[MediaItem],
@@ -214,16 +214,16 @@ async def test_list_media_items(
 ) -> None:
     """Test list media_items API."""
 
-    list_media_items.extend(list_media_items_requests)
+    search_media_items.extend(list_media_items_requests)
     result = await api.list_media_items()
     assert result.media_items == expected_result
     assert result.next_page_token == expected_page_token
     assert len(requests) == 1
-    assert requests[0].method == "GET"
-    assert requests[0].path == "/path-prefix/v1/mediaItems"
+    assert requests[0].method == "POST"
+    assert requests[0].path == "/path-prefix/v1/mediaItems:search"
     assert (
         requests[0].query_string
-        == "pageSize=20&fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
+        == "fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
     )
 
 
@@ -264,20 +264,20 @@ async def test_list_items_in_album(
 )
 async def test_list_media_items_paging(
     api: GooglePhotosLibraryApi,
-    list_media_items: list[dict[str, Any]],
+    search_media_items: list[dict[str, Any]],
     requests: list[aiohttp.web.Request],
     fields: str | None,
     expected_fields: str,
 ) -> None:
     """Test list media_items API."""
 
-    list_media_items.append(
+    search_media_items.append(
         {
             "mediaItems": [FAKE_MEDIA_ITEM],
             "nextPageToken": "next-page-token-1",
         }
     )
-    list_media_items.append(
+    search_media_items.append(
         {
             "mediaItems": [FAKE_MEDIA_ITEM2],
         }
@@ -291,14 +291,14 @@ async def test_list_media_items_paging(
         MediaItem(id="media-item-id-2", description="Photo 2"),
     ]
     assert len(requests) == 2
-    assert requests[0].method == "GET"
-    assert requests[0].path == "/path-prefix/v1/mediaItems"
-    assert requests[0].query_string == f"pageSize=20&fields={expected_fields}"
-    assert requests[1].method == "GET"
-    assert requests[1].path == "/path-prefix/v1/mediaItems"
+    assert requests[0].method == "POST"
+    assert requests[0].path == "/path-prefix/v1/mediaItems:search"
+    assert requests[0].query_string == f"fields={expected_fields}"
+    assert requests[1].method == "POST"
+    assert requests[1].path == "/path-prefix/v1/mediaItems:search"
     assert (
         requests[1].query_string
-        == f"pageSize=20&pageToken=next-page-token-1&fields={expected_fields}"
+        == f"fields={expected_fields}"
     )
 
 
@@ -450,12 +450,15 @@ async def test_list_albums(
     assert len(requests) == 2
     assert requests[0].method == "GET"
     assert requests[0].path == "/path-prefix/v1/albums"
-    assert requests[0].query_string == f"pageSize=20&fields={expected_fields}"
+    assert (
+        requests[0].query_string
+        == f"pageSize=20&fields={expected_fields}&excludeNonAppCreatedData=true"
+    )
     assert requests[1].method == "GET"
     assert requests[1].path == "/path-prefix/v1/albums"
     assert (
         requests[1].query_string
-        == f"pageSize=20&fields={expected_fields}&pageToken=next-page-token-1"
+        == f"pageSize=20&fields={expected_fields}&excludeNonAppCreatedData=true&pageToken=next-page-token-1"
     )
 
 
