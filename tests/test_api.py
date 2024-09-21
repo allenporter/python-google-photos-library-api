@@ -2,7 +2,7 @@
 
 from typing import Any
 from unittest.mock import patch
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 
 import pytest
 import aiohttp
@@ -40,6 +40,7 @@ FAKE_LIST_MEDIA_ITEMS = {
 async def mock_get_user_info() -> list[dict[str, Any]]:
     """Fixture for returning fake user info responses."""
     return []
+
 
 @pytest.fixture(name="get_media_items")
 async def mock_get_media_item() -> list[dict[str, Any]]:
@@ -94,7 +95,7 @@ async def mock_api(
     list_albums: list[dict[str, Any]],
     upload_media_items: list[str],
     create_media_items: list[dict[str, Any]],
-) -> Generator[GooglePhotosLibraryApi, None, None]:
+) -> AsyncGenerator[GooglePhotosLibraryApi, None]:
     """Fixture for fake API object."""
 
     async def get_user_info_handler(
@@ -169,13 +170,11 @@ async def test_get_user_info(
             "profile_picture": "http://example.com/profile.jpg",
             "full_name": "User Full Name",
             "given_name": "User Given Name",
-        }       
+        }
     )
     result = await api.get_user_info()
     assert result == UserInfoResult(
-        id="user-id-1",
-        name="User Name",
-        email="user@example.com"
+        id="user-id-1", name="User Name", email="user@example.com"
     )
 
 
@@ -506,7 +505,6 @@ async def test_create_media_items(
             )
         ]
     )
-
 
 
 # {
