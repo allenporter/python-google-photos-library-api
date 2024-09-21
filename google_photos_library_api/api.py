@@ -21,7 +21,16 @@ class GooglePhotosAuth(auth.AbstractAuth):
 auth = GooglePhotosAuth()
 api = api.GooglePhotosLibraryApi(auth)
 
-# List all media items
+# Upload content
+with open("image.jpg", "rb") as fd:
+    upload_result = await api.upload_content(fd.read(), "image/jpeg")
+
+# Create a media item
+await api.create_media_items([
+    NewMediaItem(SimpleMediaItem(upload_token=upload_result.upload_token))
+])
+
+# List all media items created by this application
 result = await api.list_media_items()
 for item in result.media_items:
     print(item.id)
@@ -91,7 +100,6 @@ class GooglePhotosLibraryApi:
         page_size: int | None = None,
         page_token: str | None = None,
         album_id: str | None = None,
-        favorites: bool = False,
         fields: str | None = None,
     ) -> ListMediaItemResult:
         """Get all MediaItem resources."""
@@ -103,7 +111,6 @@ class GooglePhotosLibraryApi:
                 page_size=page_size,
                 page_token=next_page_token,
                 album_id=album_id,
-                favorites=favorites,
                 fields=fields,
             )
 
@@ -116,7 +123,6 @@ class GooglePhotosLibraryApi:
         page_size: int | None = None,
         page_token: str | None = None,
         album_id: str | None = None,
-        favorites: bool = False,
         fields: str | None = None,
     ) -> _ListMediaItemResultModel:
         """Get all MediaItem resources."""
@@ -125,11 +131,9 @@ class GooglePhotosLibraryApi:
         }
         if page_token is not None:
             args["pageToken"] = page_token
-        if album_id is not None or favorites:
+        if album_id is not None:
             if album_id is not None:
                 args["albumId"] = album_id
-            if favorites:
-                args["filters"] = {"featureFilter": {"includedFeatures": "FAVORITES"}}
             return await self._auth.post_json(
                 "v1/mediaItems:search",
                 params={"fields": (fields or LIST_MEDIA_ITEM_FIELDS)},

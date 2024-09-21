@@ -220,27 +220,6 @@ async def test_list_items_in_album(
     )
 
 
-async def test_list_favorites(
-    api: GooglePhotosLibraryApi,
-    search_media_items: list[dict[str, Any]],
-    requests: list[aiohttp.web.Request],
-) -> None:
-    """Test list media_items API limited to favorites."""
-
-    search_media_items.append(FAKE_LIST_MEDIA_ITEMS)
-    result = await api.list_media_items(favorites=True)
-    assert result.media_items == [
-        MediaItem(id="media-item-id-1", description="Photo 1")
-    ]
-    assert len(requests) == 1
-    assert requests[0].method == "POST"
-    assert requests[0].path == "/path-prefix/v1/mediaItems:search"
-    assert (
-        requests[0].query_string
-        == "fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
-    )
-
-
 @pytest.mark.parametrize(
     ("fields", "expected_fields"),
     [
@@ -298,7 +277,6 @@ async def test_list_media_items_paging(
 @pytest.mark.parametrize(
     "list_args",
     [
-        {"favorites": True},
         {"album_id": "album-id-1"},
     ],
 )
@@ -505,12 +483,3 @@ async def test_create_media_items(
             )
         ]
     )
-
-
-# {
-# "id": "116618657093700277239",
-# "name": "Allen Porter",
-# "given_name": "Allen",
-# "family_name": "Porter",
-# "picture": "https://lh3.googleusercontent.com/a/ACg8ocIvpgDvADV0hk7ozXFdBsjXVmrg6KW19D-ptTvSljYT6ta-obfFkQ=s96-c"
-# }

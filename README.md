@@ -1,8 +1,13 @@
-A python client library for Google Photos Library API. 
+A python client library for Google Photos Library API.
 
-The Google Photos Library API allows your app to read, write, and share photos
-and videos in Google Photos. See [Google Photos APIs](https://developers.google.com/photos)
+The Google Photos Library API allows your app to upload photos and videos to
+Google Photos. See [Google Photos APIs](https://developers.google.com/photos)
 for more details on how to integrate Google Photos with your application.
+
+This library does not currently support the [picker API](https://developers.google.com/photos/picker/guides/get-started-picker).
+
+See [Updates to the Google Photos APIs](https://developers.google.com/photos/support/updates) for
+additional detail on the latest changes to the API.
 
 ## Background
 
