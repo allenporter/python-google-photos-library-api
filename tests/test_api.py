@@ -465,6 +465,9 @@ async def test_upload_items(
         {
             "code": 200,
         },
+        {
+            "message": "Success"
+        }
     ],
 )
 async def test_create_media_items(
