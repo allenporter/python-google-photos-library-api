@@ -1,6 +1,8 @@
 """Tests for Google Photos library API."""
 
 from typing import Any
+from unittest.mock import patch
+from collections.abc import Generator
 
 import pytest
 import aiohttp
@@ -13,6 +15,7 @@ from google_photos_library_api.model import (
     NewMediaItem,
     SimpleMediaItem,
     Status,
+    UserInfoResult,
 )
 from google_photos_library_api.model import MediaItem, Album
 
@@ -32,6 +35,11 @@ FAKE_LIST_MEDIA_ITEMS = {
     "mediaItems": [FAKE_MEDIA_ITEM],
 }
 
+
+@pytest.fixture(name="get_user_info")
+async def mock_get_user_info() -> list[dict[str, Any]]:
+    """Fixture for returning fake user info responses."""
+    return []
 
 @pytest.fixture(name="get_media_items")
 async def mock_get_media_item() -> list[dict[str, Any]]:
@@ -79,14 +87,21 @@ async def mock_requests() -> list[aiohttp.web.Request]:
 async def mock_api(
     auth_cb: AuthCallback,
     requests: list[aiohttp.web.Request],
+    get_user_info: list[dict[str, Any]],
     get_media_items: list[dict[str, Any]],
     list_media_items: list[dict[str, Any]],
     search_media_items: list[dict[str, Any]],
     list_albums: list[dict[str, Any]],
     upload_media_items: list[str],
     create_media_items: list[dict[str, Any]],
-) -> GooglePhotosLibraryApi:
+) -> Generator[GooglePhotosLibraryApi, None, None]:
     """Fixture for fake API object."""
+
+    async def get_user_info_handler(
+        request: aiohttp.web.Request,
+    ) -> aiohttp.web.Response:
+        requests.append(request)
+        return aiohttp.web.json_response(get_user_info.pop(0))
 
     async def get_media_items_handler(
         request: aiohttp.web.Request,
@@ -124,17 +139,44 @@ async def mock_api(
         requests.append(request)
         return aiohttp.web.json_response(create_media_items.pop(0))
 
-    auth = await auth_cb(
-        [
-            ("/v1/mediaItems", list_media_items_handler),
-            ("/v1/mediaItems/{media_item_id}", get_media_items_handler),
-            ("/v1/mediaItems:search", search_media_items_handler),
-            ("/v1/albums", list_albums_handler),
-            ("/v1/uploads", upload_media_items_handler),
-            ("/v1/mediaItems:batchCreate", create_media_items_handler),
-        ]
+    with patch("google_photos_library_api.api.USERINFO_API", "v1/userInfo"):
+        auth = await auth_cb(
+            [
+                ("/v1/userInfo", get_user_info_handler),
+                ("/v1/mediaItems", list_media_items_handler),
+                ("/v1/mediaItems/{media_item_id}", get_media_items_handler),
+                ("/v1/mediaItems:search", search_media_items_handler),
+                ("/v1/albums", list_albums_handler),
+                ("/v1/uploads", upload_media_items_handler),
+                ("/v1/mediaItems:batchCreate", create_media_items_handler),
+            ]
+        )
+        yield GooglePhotosLibraryApi(auth)
+
+
+async def test_get_user_info(
+    api: GooglePhotosLibraryApi,
+    get_user_info: list[dict[str, Any]],
+    requests: list[aiohttp.web.Request],
+) -> None:
+    """Test get user info API."""
+
+    get_user_info.append(
+        {
+            "id": "user-id-1",
+            "name": "User Name",
+            "email": "user@example.com",
+            "profile_picture": "http://example.com/profile.jpg",
+            "full_name": "User Full Name",
+            "given_name": "User Given Name",
+        }       
     )
-    return GooglePhotosLibraryApi(auth)
+    result = await api.get_user_info()
+    assert result == UserInfoResult(
+        id="user-id-1",
+        name="User Name",
+        email="user@example.com"
+    )
 
 
 async def test_list_media_items(
@@ -464,3 +506,13 @@ async def test_create_media_items(
             )
         ]
     )
+
+
+
+# {
+# "id": "116618657093700277239",
+# "name": "Allen Porter",
+# "given_name": "Allen",
+# "family_name": "Porter",
+# "picture": "https://lh3.googleusercontent.com/a/ACg8ocIvpgDvADV0hk7ozXFdBsjXVmrg6KW19D-ptTvSljYT6ta-obfFkQ=s96-c"
+# }
