@@ -202,7 +202,7 @@ class UserInfoResult(DataClassJSONMixin):
 class _ListMediaItemResultModel(DataClassJSONMixin):
     """Api response containing a list of events."""
 
-    media_items: list[MediaItem] = field(metadata=field_options(alias="mediaItems"))
+    media_items: list[MediaItem] = field(metadata=field_options(alias="mediaItems"), default_factory=list)
     """List of media items."""
 
     next_page_token: str | None = field(
