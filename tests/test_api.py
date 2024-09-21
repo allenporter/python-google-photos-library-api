@@ -173,17 +173,22 @@ async def test_get_user_info(
     )
     result = await api.get_user_info()
     assert result == UserInfoResult(
-        id="user-id-1", name="User Name",
+        id="user-id-1",
+        name="User Name",
     )
 
 
 @pytest.mark.parametrize(
     ("list_media_items_requests", "expected_result", "expected_page_token"),
     [
-        ([FAKE_LIST_MEDIA_ITEMS], [MediaItem(id="media-item-id-1", description="Photo 1")], None),
+        (
+            [FAKE_LIST_MEDIA_ITEMS],
+            [MediaItem(id="media-item-id-1", description="Photo 1")],
+            None,
+        ),
         ([{}], [], None),
         ([{"nextPageToken": "example-token-1"}], [], "example-token-1"),
-    ]
+    ],
 )
 async def test_list_media_items(
     api: GooglePhotosLibraryApi,
@@ -206,7 +211,6 @@ async def test_list_media_items(
         requests[0].query_string
         == "pageSize=20&fields=nextPageToken,mediaItems(id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video))"
     )
-
 
 
 async def test_list_items_in_album(
