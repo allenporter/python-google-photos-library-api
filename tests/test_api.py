@@ -296,10 +296,7 @@ async def test_list_media_items_paging(
     assert requests[0].query_string == f"fields={expected_fields}"
     assert requests[1].method == "POST"
     assert requests[1].path == "/path-prefix/v1/mediaItems:search"
-    assert (
-        requests[1].query_string
-        == f"fields={expected_fields}"
-    )
+    assert requests[1].query_string == f"fields={expected_fields}"
 
 
 @pytest.mark.parametrize(

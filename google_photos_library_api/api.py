@@ -143,7 +143,6 @@ class GooglePhotosLibraryApi:
             data_cls=_ListMediaItemResultModel,
         )
 
-
     async def list_albums(
         self,
         page_size: int | None = None,
