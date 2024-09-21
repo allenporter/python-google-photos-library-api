@@ -166,15 +166,14 @@ async def test_get_user_info(
         {
             "id": "user-id-1",
             "name": "User Name",
-            "email": "user@example.com",
-            "profile_picture": "http://example.com/profile.jpg",
-            "full_name": "User Full Name",
             "given_name": "User Given Name",
+            "family_name": "User Full Name",
+            "picture": "http://example.com/profile.jpg",
         }
     )
     result = await api.get_user_info()
     assert result == UserInfoResult(
-        id="user-id-1", name="User Name", email="user@example.com"
+        id="user-id-1", name="User Name",
     )
 
 

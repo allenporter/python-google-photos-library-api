@@ -194,9 +194,6 @@ class UserInfoResult(DataClassJSONMixin):
     id: str
     """User ID."""
 
-    email: str
-    """User email."""
-
     name: str
     """User name."""
 
