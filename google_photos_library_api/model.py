@@ -154,7 +154,7 @@ class MediaItem(DataClassJSONMixin):
 
 
 @dataclass
-class Album(DataClassDictMixin):
+class Album(DataClassJSONMixin):
     """Representation of an album in Google Photos."""
 
     id: str
@@ -163,7 +163,9 @@ class Album(DataClassDictMixin):
     title: str
     """Title of the album."""
 
-    product_url: str | None = field(metadata=field_options(alias="productUrl"), default=None)
+    product_url: str | None = field(
+        metadata=field_options(alias="productUrl"), default=None
+    )
     """Google Photos URL for the album."""
 
     media_items_count: int | None = field(
@@ -189,6 +191,14 @@ class Album(DataClassDictMixin):
 
 
 @dataclass
+class NewAlbum(DataClassDictMixin):
+    """Representation of an album in Google Photos."""
+
+    title: str
+    """Title of the album."""
+
+
+@dataclass
 class UserInfoResult(DataClassJSONMixin):
     """Response from getting user info."""
 
@@ -203,7 +213,9 @@ class UserInfoResult(DataClassJSONMixin):
 class _ListMediaItemResultModel(DataClassJSONMixin):
     """Api response containing a list of events."""
 
-    media_items: list[MediaItem] = field(metadata=field_options(alias="mediaItems"), default_factory=list)
+    media_items: list[MediaItem] = field(
+        metadata=field_options(alias="mediaItems"), default_factory=list
+    )
     """List of media items."""
 
     next_page_token: str | None = field(
