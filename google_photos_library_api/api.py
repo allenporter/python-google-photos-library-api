@@ -56,6 +56,8 @@ from .model import (
     _ListMediaItemResultModel,
     _ListAlbumResultModel,
     ListAlbumResult,
+    Album,
+    NewAlbum,
 )
 
 __all__ = [
@@ -184,6 +186,34 @@ class GooglePhotosLibraryApi:
             "v1/albums",
             params=params,
             data_cls=_ListAlbumResultModel,
+        )
+
+    async def create_album(
+        self,
+        album: NewAlbum,
+    ) -> Album:
+        """Create an album and return the result Album."""
+        request: dict[str, Any] = {
+            "album": album.to_dict(),
+        }
+        return await self._auth.post_json(
+            "v1/albums",
+            json=request,
+            data_cls=Album,
+        )
+    
+    async def update_album(
+        self,
+        album: NewAlbum,
+    ) -> Album:
+        """Update an album and return the updated album."""
+        request: dict[str, Any] = {
+            "album": album.to_dict(),
+        }
+        return await self._auth.post_json(
+            "v1/albums",
+            json=request,
+            data_cls=Album,
         )
 
     async def upload_content(self, content: bytes, mime_type: str) -> UploadResult:
