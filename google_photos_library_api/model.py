@@ -1,5 +1,6 @@
 """Google Photos Library API Data Model."""
 
+from http import HTTPStatus
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, Self
@@ -296,7 +297,7 @@ class ListAlbumResult:
 class Status(DataClassJSONMixin):
     """Status of the media item."""
 
-    code: int
+    code: int = field(default=HTTPStatus.OK)
     """The status code, which should be an enum value of google.rpc.Code"""
 
     message: str | None = None
