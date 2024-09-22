@@ -35,6 +35,10 @@ FAKE_MEDIA_ITEM2 = {
 FAKE_LIST_MEDIA_ITEMS = {
     "mediaItems": [FAKE_MEDIA_ITEM],
 }
+FAKE_ALBUM = {
+    "id": "album-id-1",
+    "title": "Album 1",
+}
 
 
 @pytest.fixture(name="get_user_info")
@@ -43,9 +47,9 @@ async def mock_get_user_info() -> list[dict[str, Any]]:
     return []
 
 
-@pytest.fixture(name="get_media_items")
+@pytest.fixture(name="get_media_item")
 async def mock_get_media_item() -> list[dict[str, Any]]:
-    """Fixture for fake list media items responses."""
+    """Fixture for fake get media item responses."""
     return []
 
 
@@ -61,12 +65,6 @@ async def mock_search_media_items() -> list[dict[str, Any]]:
     return []
 
 
-@pytest.fixture(name="albums")
-async def mock_albums() -> list[dict[str, Any]]:
-    """Fixture for fake list albums responses."""
-    return []
-
-
 @pytest.fixture(name="upload_media_items")
 async def mock_upload_media_items() -> list[str]:
     """Fixture for fake list upload endpoint responses."""
@@ -76,6 +74,18 @@ async def mock_upload_media_items() -> list[str]:
 @pytest.fixture(name="create_media_items")
 async def mock_create_media_items() -> list[dict[str, Any]]:
     """Fixture for fake create media items responses."""
+    return []
+
+
+@pytest.fixture(name="get_album")
+async def mock_get_album() -> list[dict[str, Any]]:
+    """Fixture for fake album responses."""
+    return []
+
+
+@pytest.fixture(name="albums")
+async def mock_albums() -> list[dict[str, Any]]:
+    """Fixture for fake list albums responses."""
     return []
 
 
@@ -96,9 +106,10 @@ async def mock_api(
     auth_cb: AuthCallback,
     requests: list[aiohttp.web.Request],
     get_user_info: list[dict[str, Any]],
-    get_media_items: list[dict[str, Any]],
+    get_media_item: list[dict[str, Any]],
     list_media_items: list[dict[str, Any]],
     search_media_items: list[dict[str, Any]],
+    get_album: list[dict[str, Any]],
     albums: list[dict[str, Any]],
     upload_media_items: list[str],
     create_media_items: list[dict[str, Any]],
@@ -112,11 +123,11 @@ async def mock_api(
         requests.append(request)
         return aiohttp.web.json_response(get_user_info.pop(0))
 
-    async def get_media_items_handler(
+    async def get_media_item_handler(
         request: aiohttp.web.Request,
     ) -> aiohttp.web.Response:
         requests.append(request)
-        return aiohttp.web.json_response(get_media_items.pop(0))
+        return aiohttp.web.json_response(get_media_item.pop(0))
 
     async def list_media_items_handler(
         request: aiohttp.web.Request,
@@ -129,6 +140,12 @@ async def mock_api(
     ) -> aiohttp.web.Response:
         requests.append(request)
         return aiohttp.web.json_response(search_media_items.pop(0))
+
+    async def get_album_handler(
+        request: aiohttp.web.Request,
+    ) -> aiohttp.web.Response:
+        requests.append(request)
+        return aiohttp.web.json_response(get_album.pop(0))
 
     async def albums_handler(
         request: aiohttp.web.Request,
@@ -159,9 +176,10 @@ async def mock_api(
             [
                 ("/v1/userInfo", get_user_info_handler),
                 ("/v1/mediaItems", list_media_items_handler),
-                ("/v1/mediaItems/{media_item_id}", get_media_items_handler),
+                ("/v1/mediaItems/{media_item_id}", get_media_item_handler),
                 ("/v1/mediaItems:search", search_media_items_handler),
                 ("/v1/albums", albums_handler),
+                ("/v1/albums/{album_id}", get_album_handler),
                 ("/v1/uploads", upload_media_items_handler),
                 ("/v1/mediaItems:batchCreate", create_media_items_handler),
             ]
@@ -367,20 +385,47 @@ async def test_search_items_paging(
 )
 async def test_get_media_item(
     api: GooglePhotosLibraryApi,
-    get_media_items: list[dict[str, Any]],
+    get_media_item: list[dict[str, Any]],
     requests: list[aiohttp.web.Request],
     fields: str | None,
     expected_fields: str | None,
 ) -> None:
     """Test get media_items API."""
 
-    get_media_items.append(FAKE_MEDIA_ITEM)
+    get_media_item.append(FAKE_MEDIA_ITEM)
     result = await api.get_media_item("media-item-id-1", fields=fields)
     assert result == MediaItem(id="media-item-id-1", description="Photo 1")
 
     assert len(requests) == 1
     assert requests[0].method == "GET"
     assert requests[0].path == "/path-prefix/v1/mediaItems/media-item-id-1"
+    assert requests[0].query_string == f"fields={expected_fields}"
+
+
+@pytest.mark.parametrize(
+    ("fields", "expected_fields"),
+    [
+        (None, "id,title,coverPhotoBaseUrl,coverPhotoMediaItemId"),
+        ("id,title", "id,title"),
+    ],
+    ids=("default_fields", "custom_fields"),
+)
+async def test_get_album(
+    api: GooglePhotosLibraryApi,
+    get_album: list[dict[str, Any]],
+    requests: list[aiohttp.web.Request],
+    fields: str | None,
+    expected_fields: str | None,
+) -> None:
+    """Test get album API."""
+
+    get_album.append(FAKE_ALBUM)
+    result = await api.get_album("album-id-1", fields=fields)
+    assert result == Album(id="album-id-1", title="Album 1")
+
+    assert len(requests) == 1
+    assert requests[0].method == "GET"
+    assert requests[0].path == "/path-prefix/v1/albums/album-id-1"
     assert requests[0].query_string == f"fields={expected_fields}"
 
 
