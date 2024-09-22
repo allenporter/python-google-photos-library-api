@@ -75,9 +75,7 @@ GET_MEDIA_ITEM_FIELDS = (
 )
 LIST_MEDIA_ITEM_FIELDS = f"nextPageToken,mediaItems({GET_MEDIA_ITEM_FIELDS})"
 GET_ALBUM_FIELDS = "id,title,coverPhotoBaseUrl,coverPhotoMediaItemId"
-LIST_ALBUMS_FIELDS = (
-    f"nextPageToken,albums({GET_ALBUM_FIELDS})"
-)
+LIST_ALBUMS_FIELDS = f"nextPageToken,albums({GET_ALBUM_FIELDS})"
 USERINFO_API = "https://www.googleapis.com/oauth2/v1/userinfo"
 
 
@@ -144,9 +142,7 @@ class GooglePhotosLibraryApi:
             data_cls=_ListMediaItemResultModel,
         )
 
-    async def get_album(
-        self, album_id: str, fields: str | None = None
-    ) -> Album:
+    async def get_album(self, album_id: str, fields: str | None = None) -> Album:
         """Get all Album resources."""
         return await self._auth.get_json(
             f"v1/albums/{album_id}",
