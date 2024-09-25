@@ -134,7 +134,8 @@ class GooglePhotosLibraryApi:
             args["pageToken"] = page_token
         if album_id is not None:
             args["albumId"] = album_id
-        args["filters"] = {"excludeNonAppCreatedData": True}
+        else:
+            args["filters"] = {"excludeNonAppCreatedData": True}
         return await self._auth.post_json(
             "v1/mediaItems:search",
             params={"fields": (fields or LIST_MEDIA_ITEM_FIELDS)},
