@@ -1,8 +1,8 @@
 """Google Photos Library API Data Model."""
 
-from http import HTTPStatus
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass, field
+from http import HTTPStatus
 from typing import Any, Self
 
 from mashumaro import DataClassDictMixin, field_options

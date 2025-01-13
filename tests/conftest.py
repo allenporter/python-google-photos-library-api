@@ -2,10 +2,10 @@
 
 from collections.abc import Awaitable, Callable
 
-from aiohttp.web import Application
-from aiohttp import ClientSession
 import aiohttp
 import pytest
+from aiohttp import ClientSession
+from aiohttp.web import Application
 
 from google_photos_library_api.auth import AbstractAuth
 

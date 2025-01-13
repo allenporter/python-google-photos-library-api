@@ -4,23 +4,18 @@ Callers subclass this to provide an asyncio implementation that refreshes
 authentication tokens.
 """
 
-from http import HTTPStatus
-from abc import ABC, abstractmethod
 import logging
+from abc import ABC, abstractmethod
+from http import HTTPStatus
 from typing import Any, TypeVar
-from mashumaro.mixins.json import DataClassJSONMixin
 
 import aiohttp
-
 from aiohttp.client_exceptions import ClientError
+from mashumaro.mixins.json import DataClassJSONMixin
 
-from .exceptions import (
-    ApiForbiddenException,
-    ApiException,
-    AuthException,
-)
 from .const import LIBRARY_API_URL
-from .model import ErrorResponse, Error
+from .exceptions import ApiException, ApiForbiddenException, AuthException
+from .model import Error, ErrorResponse
 
 __all__ = ["AbstractAuth"]
 

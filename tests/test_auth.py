@@ -1,18 +1,15 @@
 """Tests for the request client library."""
 
-import aiohttp
 import re
-import pytest
 from dataclasses import dataclass, field
 
-from mashumaro.mixins.json import DataClassJSONMixin
+import aiohttp
+import pytest
 from mashumaro import field_options
+from mashumaro.mixins.json import DataClassJSONMixin
 
 from google_photos_library_api.auth import AbstractAuth
-from google_photos_library_api.exceptions import (
-    ApiException,
-    ApiForbiddenException,
-)
+from google_photos_library_api.exceptions import ApiException, ApiForbiddenException
 
 from .conftest import AuthCallback
 

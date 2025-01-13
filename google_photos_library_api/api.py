@@ -41,23 +41,22 @@ for item in result.media_items:
 import logging
 from typing import Any
 
-
 from aiohttp.client_exceptions import ClientError
 
-from .exceptions import GooglePhotosApiError
 from .auth import AbstractAuth
+from .exceptions import GooglePhotosApiError
 from .model import (
-    MediaItem,
-    ListMediaItemResult,
-    CreateMediaItemsResult,
-    UploadResult,
-    NewMediaItem,
-    UserInfoResult,
-    _ListMediaItemResultModel,
-    _ListAlbumResultModel,
-    ListAlbumResult,
     Album,
+    CreateMediaItemsResult,
+    ListAlbumResult,
+    ListMediaItemResult,
+    MediaItem,
     NewAlbum,
+    NewMediaItem,
+    UploadResult,
+    UserInfoResult,
+    _ListAlbumResultModel,
+    _ListMediaItemResultModel,
 )
 
 __all__ = [

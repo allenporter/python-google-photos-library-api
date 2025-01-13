@@ -1,28 +1,27 @@
 """Tests for Google Photos library API."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import patch
-from collections.abc import AsyncGenerator
 
-import pytest
 import aiohttp
+import pytest
 
 from google_photos_library_api.api import GooglePhotosLibraryApi
 from google_photos_library_api.model import (
+    Album,
     CreateMediaItemsResult,
-    NewMediaItemResult,
-    UploadResult,
+    MediaItem,
+    NewAlbum,
     NewMediaItem,
+    NewMediaItemResult,
     SimpleMediaItem,
     Status,
+    UploadResult,
     UserInfoResult,
-    NewAlbum,
 )
-from google_photos_library_api.model import MediaItem, Album
-
 
 from .conftest import AuthCallback
-
 
 FAKE_MEDIA_ITEM = {
     "id": "media-item-id-1",
