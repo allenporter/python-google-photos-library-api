@@ -1,18 +1,15 @@
 """Tests for the request client library."""
 
-import aiohttp
 import re
-import pytest
 from dataclasses import dataclass, field
 
-from mashumaro.mixins.json import DataClassJSONMixin
+import aiohttp
+import pytest
 from mashumaro import field_options
+from mashumaro.mixins.json import DataClassJSONMixin
 
 from google_photos_library_api.auth import AbstractAuth
-from google_photos_library_api.exceptions import (
-    ApiException,
-    ApiForbiddenException,
-)
+from google_photos_library_api.exceptions import ApiException, ApiForbiddenException
 
 from .conftest import AuthCallback
 
@@ -254,11 +251,11 @@ async def test_invalid_argument(auth_cb: AuthCallback) -> None:
                             "fieldViolations": [
                                 {
                                     "field": "id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video)",
-                                    "description": "Error expanding 'fields' parameter. Cannot find matching fields for path 'id'."
+                                    "description": "Error expanding 'fields' parameter. Cannot find matching fields for path 'id'.",
                                 }
-                            ]
+                            ],
                         }
-                    ]
+                    ],
                 }
             },
             status=400,
@@ -270,6 +267,7 @@ async def test_invalid_argument(auth_cb: AuthCallback) -> None:
         ApiException,
         match=re.escape(
             "Bad Request response from API (400): INVALID_ARGUMENT (400): Request contains an invalid argument."
-        ) + "\nError details: .*",
+        )
+        + "\nError details: .*",
     ):
         await auth.get_json("some-path", data_cls=Response)

@@ -4,23 +4,18 @@ Callers subclass this to provide an asyncio implementation that refreshes
 authentication tokens.
 """
 
-from http import HTTPStatus
-from abc import ABC, abstractmethod
 import logging
-from typing import Any, TypeVar, Type
-from mashumaro.mixins.json import DataClassJSONMixin
+from abc import ABC, abstractmethod
+from http import HTTPStatus
+from typing import Any, TypeVar
 
 import aiohttp
-
 from aiohttp.client_exceptions import ClientError
+from mashumaro.mixins.json import DataClassJSONMixin
 
-from .exceptions import (
-    ApiForbiddenException,
-    ApiException,
-    AuthException,
-)
 from .const import LIBRARY_API_URL
-from .model import ErrorResponse, Error
+from .exceptions import ApiException, ApiForbiddenException, AuthException
+from .model import Error, ErrorResponse
 
 __all__ = ["AbstractAuth"]
 
@@ -84,7 +79,7 @@ class AbstractAuth(ABC):
     async def get_json(
         self,
         url: str,
-        data_cls: Type[_T],
+        data_cls: type[_T],
         **kwargs: Any,
     ) -> _T:
         """Make a get request and return json response."""
@@ -107,7 +102,7 @@ class AbstractAuth(ABC):
             raise ApiException(f"Error connecting to API: {err}") from err
         return await AbstractAuth._raise_for_status(resp)
 
-    async def post_json(self, url: str, data_cls: Type[_T], **kwargs: Any) -> _T:
+    async def post_json(self, url: str, data_cls: type[_T], **kwargs: Any) -> _T:
         """Make a post request and return a json response."""
         resp = await self.post(url, **kwargs)
         try:
@@ -143,7 +138,7 @@ class AbstractAuth(ABC):
 
     @classmethod
     async def _error_detail(cls, resp: aiohttp.ClientResponse) -> Error | None:
-        """Returns an error message string from the APi response."""
+        """Returns an error message string from the API response."""
         if resp.status < 400:
             return None
         try:
