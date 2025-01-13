@@ -1,6 +1,6 @@
 """Libraries used in tests."""
 
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from aiohttp.web import Application
 from aiohttp import ClientSession

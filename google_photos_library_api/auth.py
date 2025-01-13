@@ -7,7 +7,7 @@ authentication tokens.
 from http import HTTPStatus
 from abc import ABC, abstractmethod
 import logging
-from typing import Any, TypeVar, Type
+from typing import Any, TypeVar
 from mashumaro.mixins.json import DataClassJSONMixin
 
 import aiohttp
@@ -84,7 +84,7 @@ class AbstractAuth(ABC):
     async def get_json(
         self,
         url: str,
-        data_cls: Type[_T],
+        data_cls: type[_T],
         **kwargs: Any,
     ) -> _T:
         """Make a get request and return json response."""
@@ -107,7 +107,7 @@ class AbstractAuth(ABC):
             raise ApiException(f"Error connecting to API: {err}") from err
         return await AbstractAuth._raise_for_status(resp)
 
-    async def post_json(self, url: str, data_cls: Type[_T], **kwargs: Any) -> _T:
+    async def post_json(self, url: str, data_cls: type[_T], **kwargs: Any) -> _T:
         """Make a post request and return a json response."""
         resp = await self.post(url, **kwargs)
         try:
