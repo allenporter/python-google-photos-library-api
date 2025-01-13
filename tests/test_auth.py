@@ -254,11 +254,11 @@ async def test_invalid_argument(auth_cb: AuthCallback) -> None:
                             "fieldViolations": [
                                 {
                                     "field": "id,baseUrl,mimeType,filename,mediaMetadata(width,height,photo,video)",
-                                    "description": "Error expanding 'fields' parameter. Cannot find matching fields for path 'id'."
+                                    "description": "Error expanding 'fields' parameter. Cannot find matching fields for path 'id'.",
                                 }
-                            ]
+                            ],
                         }
-                    ]
+                    ],
                 }
             },
             status=400,
@@ -270,6 +270,7 @@ async def test_invalid_argument(auth_cb: AuthCallback) -> None:
         ApiException,
         match=re.escape(
             "Bad Request response from API (400): INVALID_ARGUMENT (400): Request contains an invalid argument."
-        ) + "\nError details: .*",
+        )
+        + "\nError details: .*",
     ):
         await auth.get_json("some-path", data_cls=Response)
