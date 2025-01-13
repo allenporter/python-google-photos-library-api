@@ -143,7 +143,7 @@ class AbstractAuth(ABC):
 
     @classmethod
     async def _error_detail(cls, resp: aiohttp.ClientResponse) -> Error | None:
-        """Returns an error message string from the APi response."""
+        """Returns an error message string from the API response."""
         if resp.status < 400:
             return None
         try:

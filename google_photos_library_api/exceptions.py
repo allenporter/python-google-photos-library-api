@@ -1,4 +1,4 @@
-"""Exceptions for Google Photos api calls."""
+"""Exceptions for Google Photos API calls."""
 
 
 class GooglePhotosApiError(Exception):
