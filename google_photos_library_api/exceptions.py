@@ -15,7 +15,3 @@ class AuthException(GooglePhotosApiError):
 
 class ApiForbiddenException(GooglePhotosApiError):
     """Raised due to permission errors talking to API."""
-
-
-class GooglePhotosParseException(GooglePhotosApiError):
-    """Raised when parsing a calendar event fails."""
