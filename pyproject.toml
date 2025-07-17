@@ -1,6 +1,30 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=77.0"]
+
+[project]
+name = "google_photos_library_api"
+version = "0.12.1"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+description = "A python client library for Google Photos Library API"
+readme = "README.md"
+authors = [{ name = "Allen Porter", email = "allen.porter@gmail.com" }]
+requires-python = ">=3.11"
+classifiers = []
+dependencies = [
+  "aiohttp>=3.7.3",
+  "mashumaro>=3.12",
+]
+
+[project.urls]
+Source = "https://github.com/allenporter/google_photos_library_api"
+
+[tool.setuptools.packages.find]
+include = ["google_photos_library_api*"]
+
 [tool.mypy]
 exclude = [
-  "setup.py",
   "venv/",
 ]
 platform = "linux"
