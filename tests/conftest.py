@@ -31,13 +31,12 @@ class FakeAuth(AbstractAuth):
 
 @pytest.fixture(name="auth_cb")
 def mock_auth_fixture(
-    aiohttp_client: Callable[[Application], Awaitable[ClientSession]]
+    aiohttp_client: Callable[[Application], Awaitable[ClientSession]],
 ) -> AuthCallback:
-
     async def create_auth(
         handlers: list[
             tuple[str, Callable[[aiohttp.web.Request], Awaitable[aiohttp.web.Response]]]
-        ]
+        ],
     ) -> AbstractAuth:
         """Create a test authentication library with the specified handler."""
         app = Application()
