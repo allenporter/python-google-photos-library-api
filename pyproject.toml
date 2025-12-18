@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.urls]
-Source = "https://github.com/allenporter/google_photos_library_api"
+Source = "https://github.com/allenporter/python-google-photos-library-api"
 
 [tool.setuptools.packages.find]
 include = ["google_photos_library_api*"]
