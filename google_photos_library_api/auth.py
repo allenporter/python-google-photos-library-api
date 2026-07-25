@@ -61,7 +61,7 @@ class AbstractAuth(ABC):
             headers = {}
         if AUTHORIZATION_HEADER not in headers:
             headers[AUTHORIZATION_HEADER] = f"Bearer {access_token}"
-        if not (url.startswith("http://") or url.startswith("https://")):
+        if not url.startswith(("http://", "https://")):
             url = f"{self._host}/{url}"
         _LOGGER.debug("request[%s]=%s %s", method, url, kwargs.get("params"))
         if method != "get" and "json" in kwargs:

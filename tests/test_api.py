@@ -113,7 +113,7 @@ async def mock_api(
     upload_media_items: list[str],
     create_media_items: list[dict[str, Any]],
     create_album: list[dict[str, Any]],
-) -> AsyncGenerator[GooglePhotosLibraryApi, None]:
+) -> AsyncGenerator[GooglePhotosLibraryApi]:
     """Fixture for fake API object."""
 
     async def get_user_info_handler(
