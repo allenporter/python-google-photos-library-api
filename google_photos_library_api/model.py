@@ -9,19 +9,19 @@ from mashumaro import DataClassDictMixin, field_options
 from mashumaro.mixins.json import DataClassJSONMixin
 
 __all__ = [
-    "ContributorInfo",
-    "CreateMediaItemsResult",
     "ListMediaItemResult",
     "MediaItem",
     "MediaMetadata",
-    "NewMediaItem",
-    "NewMediaItemResult",
     "Photo",
-    "SimpleMediaItem",
-    "Status",
-    "UploadResult",
-    "UserInfoResult",
     "Video",
+    "ContributorInfo",
+    "UploadResult",
+    "NewMediaItem",
+    "SimpleMediaItem",
+    "CreateMediaItemsResult",
+    "NewMediaItemResult",
+    "Status",
+    "UserInfoResult",
 ]
 
 

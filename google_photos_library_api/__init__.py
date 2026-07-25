@@ -4,7 +4,7 @@
 
 __all__ = [
     "api",
+    "model",
     "auth",
     "exceptions",
-    "model",
 ]
